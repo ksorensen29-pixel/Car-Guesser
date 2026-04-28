@@ -10,11 +10,13 @@ h1 {text-align: center;}
 h2 {text-align: center;}
 p {text-align: center;}
 div {text-align: center;}
+img {display: block;}
 button{color:rgb(143, 143, 143)}
 h1 {color:whitesmoke}
 h2 {color:whitesmoke}
 p {color:whitesmoke}
 div {color:whitesmoke}
+
 </style>
 <body style="font-family: sans-serif; background-color:rgb(61, 61, 61);">
     <h1 style="font-size: xx-large;"><b>CARGUESSER</b></h1>
@@ -22,18 +24,50 @@ div {color:whitesmoke}
     <h2>How to Play</h2>
     <p>Every round you will be provided a image, then you will be prompted to enter its name, production year and country of origin.</p>
     <hr>
-    <img src="1.jpeg" alt="Italian Trulli">
-    <button onclick="SkipCurrent()" style="font: size 30px; background-color: whitesmoke; border-radius:7px">skip</button>
+    
+    </script>
+    <button onclick="rollNewOptions()" style="font: size 30px; background-color: whitesmoke; border-radius:7px">skip</button>
     <script>
-        function SkipCurrent(){
-           
-        }
+        function rollNewOptions() {
+        currentCar = Math.floor(Math.random() * 7) + 1;
+
+        const img = document.getElementById("img");
+        img.src = `${currentCar}.jpeg`;
+
+        console.log("New round:", currentCar);
+        }  
     </script>
     <button onclick="RevealCurrent()" style="font: size 30px; background-color: whitesmoke; border-radius:7px">Reveal</button>
     <script>
-        function RevealCurrent(){
+        
+        const cars = [
+    { image: "1.jpeg", name: "Porsche" },
+    { image: "2.jpeg", name: "Toyota Corolla" },
+    { image: "3.jpeg", name: "Fiat Punto" },
+    { image: "4.jpeg", name: "Ferrari SF90 Stradale" },
+    { image: "5.jpeg", name: "" },
+    { image: "6.jpeg", name: "" },
+    { image: "7.jpeg", name: "" }
+];
+    
+        
+    let currentCar;
 
-        }
+function loadRandomCar() {
+    const index = Math.floor(Math.random() * cars.length);
+    currentCar = cars[index];
+
+    document.getElementById("img").src = currentCar.image;
+    
+}
+
+function RevealCurrent() {
+    document.getElementById("answer").textContent =
+        "Car Name: " + currentCar.name;
+}
+
+window.onload = loadRandomCar;
+        
     </script>
     <button onclick="HintCurrent()" style="font: size 30px; background-color: whitesmoke; border-radius:7px">Hint</button>
     <script>
@@ -41,5 +75,26 @@ div {color:whitesmoke}
 
         }
     </script>
+    <script>
+    window.onload = function () {
+    const img = document.getElementById("img");
+
+    const num = Math.floor(Math.random() * 7) + 1;
+
+    console.log("Random number:", num);
+
+    img.src = `${num}.jpeg`;
+    };
+    
+    </script>
+    <img id="img" width="400" style="margin: 20px auto;">
+
+    <form action="/action_page.php">
+  <label for="fname">Car Name:</label><br>
+  <input type="text" id="fname" name="Car Name" value=""><br>
+  <label for="lname">Production Year:</label><br>
+  <input type="number" id="lname" name="Production Year" value=""><br><br>
+  <input type="submit" value="Submit">
+</form> 
 </body>
 </html>
