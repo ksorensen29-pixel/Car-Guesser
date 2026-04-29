@@ -10,7 +10,11 @@ h1 {text-align: center;}
 h2 {text-align: center;}
 p {text-align: center;}
 div {text-align: center;}
-img {display: block;}
+img {
+  display: block;
+  margin: auto;
+  width: 50%;
+}
 button{color:rgb(143, 143, 143)}
 h1 {color:whitesmoke}
 h2 {color:whitesmoke}
@@ -25,48 +29,56 @@ div {color:whitesmoke}
     <p>Every round you will be provided a image, then you will be prompted to enter its name, production year and country of origin.</p>
     <hr>
     
-    </script>
-    <button onclick="rollNewOptions()" style="font: size 30px; background-color: whitesmoke; border-radius:7px">skip</button>
-    <script>
-        function rollNewOptions() {
-        currentCar = Math.floor(Math.random() * 7) + 1;
-
-        const img = document.getElementById("img");
-        img.src = `${currentCar}.jpeg`;
-
-        console.log("New round:", currentCar);
-        }  
-    </script>
-    <button onclick="RevealCurrent()" style="font: size 30px; background-color: whitesmoke; border-radius:7px">Reveal</button>
-    <script>
-        
-        const cars = [
-    { image: "1.jpeg", name: "Porsche" },
-    { image: "2.jpeg", name: "Toyota Corolla" },
-    { image: "3.jpeg", name: "Fiat Punto" },
-    { image: "4.jpeg", name: "Ferrari SF90 Stradale" },
-    { image: "5.jpeg", name: "" },
-    { image: "6.jpeg", name: "" },
-    { image: "7.jpeg", name: "" }
-];
     
-        
-    let currentCar;
+   
+<button onclick="RevealCurrent()" 
+style="font-size:30px; background-color:whitesmoke; border-radius:7px;">
+Reveal
+</button>
+
+<button onclick="loadRandomCar()" 
+style="font-size:30px; background-color:whitesmoke; border-radius:7px;">
+skip
+</button>
+
+<br><br>
+
+<img id="img" src="" width="400">
+
+<p id="answer"></p>
+
+<script>
+const cars = [
+  { image: "1.jpeg", name: "Porsche" },
+  { image: "2.jpeg", name: "Toyota Corolla" },
+  { image: "3.jpeg", name: "Fiat Punto" },
+  { image: "4.jpeg", name: "Ferrari SF90 Stradale" },
+  { image: "5.jpeg", name: "BMW M3" },
+  { image: "6.jpeg", name: "Audi R8" },
+  { image: "7.jpeg", name: "Honda Civic" }
+];
+
+let currentCar = null;
+let score = 0;
 
 function loadRandomCar() {
-    const index = Math.floor(Math.random() * cars.length);
-    currentCar = cars[index];
+  const index = Math.floor(Math.random() * cars.length);
+  currentCar = cars[index];
 
-    document.getElementById("img").src = currentCar.image;
-    
+  document.getElementById("img").src = currentCar.image;
+  document.getElementById("answer").textContent = "";
 }
 
 function RevealCurrent() {
+  if (currentCar !== null) {
     document.getElementById("answer").textContent =
-        "Car Name: " + currentCar.name;
+      "Car Name: " + currentCar.name;
+  }
 }
 
 window.onload = loadRandomCar;
+</script>
+
         
     </script>
     <button onclick="HintCurrent()" style="font: size 30px; background-color: whitesmoke; border-radius:7px">Hint</button>
@@ -75,26 +87,38 @@ window.onload = loadRandomCar;
 
         }
     </script>
-    <script>
-    window.onload = function () {
-    const img = document.getElementById("img");
-
-    const num = Math.floor(Math.random() * 7) + 1;
-
-    console.log("Random number:", num);
-
-    img.src = `${num}.jpeg`;
-    };
     
-    </script>
-    <img id="img" width="400" style="margin: 20px auto;">
 
-    <form action="/action_page.php">
+    <form id="guessForm">
   <label for="fname">Car Name:</label><br>
   <input type="text" id="fname" name="Car Name" value=""><br>
   <label for="lname">Production Year:</label><br>
   <input type="number" id="lname" name="Production Year" value=""><br><br>
   <input type="submit" value="Submit">
 </form> 
+<script>
+document.getElementById("guessForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+
+  const guess = document.getElementById("fname").value.trim().toLowerCase();
+
+  if (!currentCar) return;
+
+   const year = parseInt(document.getElementById("lname").value);
+
+ if (guess === currentCar.name.toLowerCase() &&
+     year === currentCar.year) {
+  score++;
+  } else {
+    document.getElementById("answer").textContent =
+      "Incorrect. Try again.";
+  }
+});
+
+window.onload = loadRandomCar;
+
+
+
+</script>
 </body>
 </html>
