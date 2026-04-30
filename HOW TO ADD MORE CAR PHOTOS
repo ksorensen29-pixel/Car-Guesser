@@ -1,1 +1,13 @@
-
+1. First find more car photos and add them to the "materials" folder (Its recommended to find multiple at once and do one upload commit) MAKE SURE THAT IT HAS A NUMERICAL NAME AND IS A JPEG.
+2. Go to a github codespace and enter the "cargamehtml.html" file and find this list.
+const cars = [
+  { image: "1.jpeg", name: "Porsche" },
+  { image: "2.jpeg", name: "Toyota Corolla" },
+  { image: "3.jpeg", name: "Fiat Punto" },
+  { image: "4.jpeg", name: "Ferrari SF90 Stradale" },
+  { image: "5.jpeg", name: "BMW M3" },
+  { image: "6.jpeg", name: "Audi R8" },
+  { image: "7.jpeg", name: "Honda Civic" }
+];
+3. Add another row with with your file name and the name of car. (For example: { image: 8.jpeg, name: "F500 Truck", year: 2017 }, ) make sure not to break the const.
+4. insure that you add the year.
