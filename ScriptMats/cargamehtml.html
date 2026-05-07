@@ -215,10 +215,6 @@ function initializeMap() {
             layer.on('mouseout', function() {
               layer.setStyle({ fillOpacity: 0.5, weight: 2 });
             });
-          } else {
-            layer.on('mouseover', function() {
-              layer.bindPopup('No cars from this country').openPopup();
-            });
           }
         }
       }).addTo(map);
