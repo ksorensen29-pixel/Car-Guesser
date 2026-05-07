@@ -3,59 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Car Guesser Game</title>
 </head>
 <style>
-h1 {text-align: center;}
-h2 {text-align: center;}
-p {text-align: center;}
-div {text-align: center;}
+h1 {
+  text-align: center;
+  color: whitesmoke;
+  font-size: xx-large;
+}
+h2 {
+  text-align: center;
+  color: whitesmoke;
+}
+p {
+  text-align: center;
+  color: whitesmoke;
+}
+div {
+  text-align: center;
+  color: whitesmoke;
+}
 img {
   display: block;
   margin: auto;
   width: 50%;
 }
-button{color:rgb(143, 143, 143)}
-h1 {color:whitesmoke}
-h2 {color:whitesmoke}
-p {color:whitesmoke}
-div {color:whitesmoke}
-
+button {
+  color: rgb(143, 143, 143);
+  font-size: 20px;
+  background-color: whitesmoke;
+  border-radius: 7px;
+  padding: 10px 20px;
+  margin: 5px;
+  cursor: pointer;
+  border: none;
+  transition: 0.3s;
+}
+button:hover {
+  background-color: rgb(200, 200, 200);
+}
+#answer {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 20px 0;
+  min-height: 30px;
+  color: rgb(100, 200, 100);
+}
+#score {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 10px 0;
+  color: whitesmoke;
+}
+form {
+  margin: 20px 0;
+  padding: 20px;
+  background-color: rgb(80, 80, 80);
+  border-radius: 7px;
+  display: inline-block;
+}
+form input[type="text"], form input[type="number"] {
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 4px;
+  border: 1px solid rgb(143, 143, 143);
+  width: 200px;
+}
+form input[type="submit"] {
+  background-color: whitesmoke;
+  color: rgb(143, 143, 143);
+  padding: 8px 20px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+form input[type="submit"]:hover {
+  background-color: rgb(200, 200, 200);
+}
+label {
+  color: whitesmoke;
+  font-weight: bold;
+  display: block;
+  margin-top: 10px;
+}
 </style>
 <body style="font-family: sans-serif; background-color:rgb(61, 61, 61);">
-    <h1 style="font-size: xx-large;"><b>CARGUESSER</b></h1>
+    <h1><b>CARGUESSER</b></h1>
     <hr>
     <h2>How to Play</h2>
-    <p>Every round you will be provided a image, then you will be prompted to enter its name, production year and country of origin.</p>
+    <p>Every round you will be provided an image, then you will be prompted to enter its name, production year and country of origin.</p>
     <hr>
     
+    <div id="score">Score: 0</div>
     
-   
-<button onclick="RevealCurrent()" 
-style="font-size:30px; background-color:whitesmoke; border-radius:7px;">
-Reveal
-</button>
+    <button onclick="RevealCurrent()">Reveal</button>
+    <button onclick="loadRandomCar()">Skip</button>
+    <button onclick="HintCurrent()">Hint</button>
 
-<button onclick="loadRandomCar()" 
-style="font-size:30px; background-color:whitesmoke; border-radius:7px;">
-skip
-</button>
+    <br><br>
 
-<br><br>
+    <img id="img" src="" width="400" alt="Car Image">
 
-<img id="img" src="" width="400">
+    <p id="answer"></p>
 
-<p id="answer"></p>
+    <form id="guessForm">
+      <label for="fname">Car Name:</label>
+      <input type="text" id="fname" name="Car Name" required><br>
+      <label for="lname">Production Year:</label>
+      <input type="number" id="lname" name="Production Year" required><br>
+      <label for="country">Country of Origin:</label>
+      <input type="text" id="country" name="Country" required><br><br>
+      <input type="submit" value="Submit">
+    </form> 
 
 <script>
 const cars = [
-  { image: "1.jpeg", name: "Porsche" },
-  { image: "2.jpeg", name: "Toyota Corolla" },
-  { image: "3.jpeg", name: "Fiat Punto" },
-  { image: "4.jpeg", name: "Ferrari SF90 Stradale" },
-  { image: "5.jpeg", name: "Fiat Multipla 1998" },
-  { image: "6.jpeg", name: "BMW M5 2021" },
-  { image: "7.jpeg", name: "Lightning McQueen" }
+  { image: "1.jpeg", name: "Porsche", year: 2020, country: "Germany" },
+  { image: "2.jpeg", name: "Toyota Corolla", year: 2019, country: "Japan" },
+  { image: "3.jpeg", name: "Fiat Punto", year: 2015, country: "Italy" },
+  { image: "4.jpeg", name: "Ferrari SF90 Stradale", year: 2019, country: "Italy" },
+  { image: "5.jpeg", name: "Fiat Multipla", year: 1998, country: "Italy" },
+  { image: "6.jpeg", name: "BMW M5", year: 2021, country: "Germany" },
+  { image: "7.jpeg", name: "Lightning McQueen", year: 2006, country: "USA" }
 ];
 
 let currentCar = null;
@@ -67,58 +138,62 @@ function loadRandomCar() {
 
   document.getElementById("img").src = currentCar.image;
   document.getElementById("answer").textContent = "";
+  document.getElementById("guessForm").reset();
 }
 
 function RevealCurrent() {
   if (currentCar !== null) {
     document.getElementById("answer").textContent =
-      "Car Name: " + currentCar.name;
+      "Car Name: " + currentCar.name + " | Year: " + currentCar.year + " | Country: " + currentCar.country;
   }
 }
 
-window.onload = loadRandomCar;
-</script>
+function HintCurrent() {
+  if (currentCar !== null) {
+    const hint = "Country: " + currentCar.country + " | Year: " + currentCar.year;
+    document.getElementById("answer").textContent = "Hint: " + hint;
+  }
+}
 
-        
-    </script>
-    <button onclick="HintCurrent()" style="font: size 30px; background-color: whitesmoke; border-radius:7px">Hint</button>
-    <script>
-        function HintCurrent(){
+function updateScore() {
+  document.getElementById("score").textContent = "Score: " + score;
+}
 
-        }
-    </script>
-    
+window.onload = function() {
+  loadRandomCar();
+  updateScore();
+};
 
-    <form id="guessForm">
-  <label for="fname">Car Name:</label><br>
-  <input type="text" id="fname" name="Car Name" value=""><br>
-  <label for="lname">Production Year:</label><br>
-  <input type="number" id="lname" name="Production Year" value=""><br><br>
-  <input type="submit" value="Submit">
-</form> 
-<script>
 document.getElementById("guessForm").addEventListener("submit", function (e) {
   e.preventDefault();
 
   const guess = document.getElementById("fname").value.trim().toLowerCase();
+  const year = parseInt(document.getElementById("lname").value);
+  const country = document.getElementById("country").value.trim().toLowerCase();
 
   if (!currentCar) return;
 
-   const year = parseInt(document.getElementById("lname").value);
-
- if (guess === currentCar.name.toLowerCase() &&
-     year === currentCar.year) {
-  score++;
+  if (guess === currentCar.name.toLowerCase() &&
+      year === currentCar.year &&
+      country === currentCar.country.toLowerCase()) {
+    score++;
+    updateScore();
+    document.getElementById("answer").textContent = "✓ Correct! Moving to next car...";
+    setTimeout(loadRandomCar, 1500);
   } else {
-    document.getElementById("answer").textContent =
-      "Incorrect. Try again.";
+    let feedback = "✗ Incorrect. ";
+    if (guess !== currentCar.name.toLowerCase()) {
+      feedback += "Car name is wrong. ";
+    }
+    if (year !== currentCar.year) {
+      feedback += "Year is wrong. ";
+    }
+    if (country !== currentCar.country.toLowerCase()) {
+      feedback += "Country is wrong. ";
+    }
+    document.getElementById("answer").textContent = feedback + "Try again.";
   }
 });
-
-window.onload = loadRandomCar;
-
-
-
 </script>
 </body>
 </html>
