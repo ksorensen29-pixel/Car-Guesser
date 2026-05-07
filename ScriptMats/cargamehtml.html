@@ -194,11 +194,11 @@ function initializeMap() {
           const hasCarFromCountry = countriesWithCars.includes(countryName);
           
           return {
-            color: hasCarFromCountry ? 'rgb(143, 143, 143)' : 'rgb(100, 100, 100)',
+            color: hasCarFromCountry ? 'rgb(50, 200, 80)' : 'rgb(100, 100, 100)',
             weight: hasCarFromCountry ? 2 : 1,
-            opacity: hasCarFromCountry ? 0.8 : 0.4,
-            fillOpacity: hasCarFromCountry ? 0.5 : 0.2,
-            fillColor: hasCarFromCountry ? 'rgb(100, 150, 100)' : 'rgb(80, 80, 80)'
+            opacity: hasCarFromCountry ? 1 : 0.4,
+            fillOpacity: hasCarFromCountry ? 0.7 : 0.2,
+            fillColor: hasCarFromCountry ? 'rgb(50, 200, 80)' : 'rgb(80, 80, 80)'
           };
         },
         onEachFeature: function(feature, layer) {
