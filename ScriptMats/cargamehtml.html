@@ -108,6 +108,11 @@ label {
 
     <p id="answer"></p>
 
+    <div id="carList" style="background-color: rgb(80, 80, 80); padding: 15px; border-radius: 7px; margin: 20px auto; max-width: 400px; text-align: left;">
+      <p style="text-align: center; font-weight: bold; margin-top: 0;">Available Cars:</p>
+      <ul id="carNames" style="color: whitesmoke; padding-left: 20px; margin: 10px 0;"></ul>
+    </div>
+
     <form id="guessForm">
       <label for="fname">Car Name:</label>
       <input type="text" id="fname" name="Car Name" required><br>
@@ -148,7 +153,6 @@ function loadRandomCar() {
   document.getElementById("img").src = currentCar.image;
   document.getElementById("answer").textContent = "";
   document.getElementById("guessForm").reset();
-  document.getElementById("fname").value = currentCar.name;
 }
 
 function RevealCurrent() {
@@ -169,9 +173,20 @@ function updateScore() {
   document.getElementById("score").textContent = "Score: " + score;
 }
 
+function displayCarNames() {
+  const carNamesList = document.getElementById("carNames");
+  carNamesList.innerHTML = "";
+  cars.forEach(car => {
+    const listItem = document.createElement("li");
+    listItem.textContent = car.name;
+    carNamesList.appendChild(listItem);
+  });
+}
+
 window.onload = function() {
   loadRandomCar();
   updateScore();
+  displayCarNames();
 };
 
 document.getElementById("guessForm").addEventListener("submit", function (e) {
