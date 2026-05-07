@@ -139,6 +139,7 @@ function loadRandomCar() {
   document.getElementById("img").src = currentCar.image;
   document.getElementById("answer").textContent = "";
   document.getElementById("guessForm").reset();
+  document.getElementById("fname").value = currentCar.name;
 }
 
 function RevealCurrent() {
