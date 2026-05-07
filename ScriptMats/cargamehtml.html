@@ -139,7 +139,7 @@ label {
       <input type="text" id="fname" name="Car Name" list="carSuggestions" required><br>
       <datalist id="carSuggestions"></datalist>
       <label for="lname">Production Year:</label><br>
-      <input type="number" id="lname" name="Production Year" list="yearSuggestions" required><br>
+      <input type="number" id="lname" name="Production Year" list="yearSuggestions" min="1900" max="2100" step="1" required><br>
       <datalist id="yearSuggestions"></datalist>
       <label>Country of Origin (Click on map):</label>
       <div id="mapContainer"></div>
@@ -186,7 +186,10 @@ function initializeMap() {
   }).addTo(map);
   
   fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) throw new Error('Failed to load countries data');
+      return response.json();
+    })
     .then(data => {
       geoJsonLayer = L.geoJson(data, {
         style: function(feature) {
@@ -218,6 +221,10 @@ function initializeMap() {
           }
         }
       }).addTo(map);
+    })
+    .catch(error => {
+      console.error('Error loading map:', error);
+      document.getElementById('mapContainer').innerHTML = '<p style="padding: 20px; color: red;">Error loading map. Please refresh the page.</p>';
     });
 }
 
@@ -230,9 +237,21 @@ function loadRandomCar() {
   const index = Math.floor(Math.random() * cars.length);
   currentCar = cars[index];
 
-  document.getElementById("img").src = currentCar.image;
-  document.getElementById("answer").textContent = "";
+  const imgElement = document.getElementById("img");
+  imgElement.src = currentCar.image;
+  
+  // Add error handling for image loading
+  imgElement.onerror = function() {
+    document.getElementById("answer").textContent = "⚠️ Image failed to load. Please skip to next car.";
+    currentCar = null;
+  };
+  
+  imgElement.onload = function() {
+    document.getElementById("answer").textContent = "";
+  };
+  
   document.getElementById("guessForm").reset();
+  document.getElementById("selectedCountry").textContent = "No country selected";
 }
 
 function RevealCurrent() {
@@ -315,6 +334,12 @@ document.getElementById("guessForm").addEventListener("submit", function (e) {
   const country = document.getElementById("country").value.trim().toLowerCase();
 
   if (!currentCar) return;
+
+  // Validate country is selected
+  if (!country) {
+    document.getElementById("answer").textContent = "✗ Please select a country from the map.";
+    return;
+  }
 
   if (guess === currentCar.name.toLowerCase() &&
       year === currentCar.year &&
