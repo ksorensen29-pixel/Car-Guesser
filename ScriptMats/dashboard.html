@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Guesser - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .dashboard-container {
+            background: rgb(61, 61, 61);
+            color: whitesmoke;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 36px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+
+        .google-signin-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .google-signin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info h2 {
+            margin-bottom: 5px;
+            color: whitesmoke;
+        }
+
+        .user-info p {
+            color: rgb(200, 200, 200);
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-btn:hover {
+            background: #ff5252;
+        }
+
+        .dashboard-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: whitesmoke;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .game-modes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .game-card {
+            background: rgb(80, 80, 80);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .game-card h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: whitesmoke;
+        }
+
+        .game-card p {
+            color: rgb(200, 200, 200);
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .play-btn {
+            padding: 10px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .play-btn:hover {
+            background: #764ba2;
+        }
+
+        .leaderboard {
+            background: rgb(80, 80, 80);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: whitesmoke;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            background: rgb(60, 60, 60);
+            border-bottom: 2px solid #667eea;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgb(100, 100, 100);
+        }
+
+        tr:hover {
+            background: rgb(90, 90, 90);
+        }
+
+        .rank {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgb(200, 200, 200);
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgb(61, 61, 61);
+            padding: 40px;
+            border-radius: 10px;
+            max-width: 500px;
+            color: whitesmoke;
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #667eea;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #764ba2;
+        }
+
+        .btn-secondary {
+            background: rgb(100, 100, 100);
+            color: whitesmoke;
+        }
+
+        .btn-secondary:hover {
+            background: rgb(120, 120, 120);
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginContainer" class="login-container">
+    <h1>🏎️ CARGUESSER</h1>
+    <p class="subtitle">Guess the cars. Compete with friends. Dominate the leaderboard.</p>
+    <button class="google-signin-btn" onclick="handleGoogleSignIn()">
+        🔐 Sign in with Google
+    </button>
+</div>
+
+<div id="dashboardContainer" class="dashboard-container" style="display: none;">
+    <div class="dashboard-header">
+        <h1>🏎️ CARGUESSER</h1>
+        <div class="user-profile">
+            <div class="user-info">
+                <h2 id="userName">User</h2>
+                <p id="userEmail">email@example.com</p>
+            </div>
+            <img id="userPhoto" class="profile-img" src="" alt="Profile">
+            <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="section">
+            <h2>🎮 Game Modes</h2>
+            <div class="game-modes">
+                <div class="game-card" onclick="startSinglePlayer()">
+                    <h3>Single Player</h3>
+                    <p>Test your car knowledge solo</p>
+                    <button class="play-btn">Play Now</button>
+                </div>
+                <div class="game-card" onclick="showCreateMultiplayerModal()">
+                    <h3>Multiplayer</h3>
+                    <p>Compete with a friend</p>
+                    <button class="play-btn">Create Game</button>
+                </div>
+                <div class="game-card" onclick="showJoinMultiplayerModal()">
+                    <h3>Join Game</h3>
+                    <p>Join a friend's game</p>
+                    <button class="play-btn">Join</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏆 Global Leaderboard</h2>
+            <div class="leaderboard">
+                <div id="leaderboardContent" class="loading">Loading leaderboard...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="createGameModal" class="modal">
+    <div class="modal-content">
+        <h2>Create Multiplayer Game</h2>
+        <p id="gameCode" style="font-size: 24px; color: #667eea; margin: 20px 0;"></p>
+        <p style="margin-bottom: 20px;">Share this code with your friend!</p>
+        <button class="play-btn" onclick="copyGameCode()">📋 Copy Code</button>
+        <button class="btn-secondary" onclick="closeModal('createGameModal')" style="margin-top: 10px;">Close</button>
+    </div>
+</div>
+
+<div id="joinGameModal" class="modal">
+    <div class="modal-content">
+        <h2>Join Multiplayer Game</h2>
+        <input type="text" id="gameCodeInput" placeholder="Enter game code" maxlength="6">
+        <div class="modal-buttons">
+            <button class="btn-primary" onclick="joinMultiplayerGame()">Join</button>
+            <button class="btn-secondary" onclick="closeModal('joinGameModal')">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { 
+        supabase, 
+        signInWithGoogle, 
+        signOut, 
+        getCurrentUser, 
+        updateUserProfile,
+        getLeaderboard,
+        createMultiplayerGame
+    } from './supabase-config.js';
+
+    let currentUser = null;
+
+    // Initialize on page load
+    async function init() {
+        await checkAuthStatus();
+        if (currentUser) {
+            displayDashboard();
+            loadLeaderboard();
+        }
+    }
+
+    async function checkAuthStatus() {
+        const user = await getCurrentUser();
+        if (user) {
+            currentUser = user;
+        }
+    }
+
+    window.handleGoogleSignIn = async function() {
+        const result = await signInWithGoogle();
+        if (!result.success) {
+            alert('Sign in failed: ' + result.error);
+        }
+    };
+
+    window.handleLogout = async function() {
+        const result = await signOut();
+        if (result.success) {
+            window.location.href = 'dashboard.html';
+        }
+    };
+
+    function displayDashboard() {
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('dashboardContainer').style.display = 'block';
+        
+        document.getElementById('userName').textContent = currentUser.user_metadata?.name || 'User';
+        document.getElementById('userEmail').textContent = currentUser.email;
+        if (currentUser.user_metadata?.picture) {
+            document.getElementById('userPhoto').src = currentUser.user_metadata.picture;
+        }
+    }
+
+    async function loadLeaderboard() {
+        const result = await getLeaderboard(10);
+        const container = document.getElementById('leaderboardContent');
+        
+        if (!result.success) {
+            container.innerHTML = `<div class="error">Failed to load leaderboard</div>`;
+            return;
+        }
+
+        if (result.data.length === 0) {
+            container.innerHTML = '<p>No scores yet. Be the first to play!</p>';
+            return;
+        }
+
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Score</th>
+                        <th>Cars Guessed</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        result.data.forEach((entry, index) => {
+            html += `
+                <tr>
+                    <td class="rank">#${index + 1}</td>
+                    <td>${entry.users?.name || 'Anonymous'}</td>
+                    <td>${entry.score}</td>
+                    <td>${entry.cars_guessed}</td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    window.startSinglePlayer = function() {
+        window.location.href = 'cargamehtml.html';
+    };
+
+    window.showCreateMultiplayerModal = async function() {
+        const result = await createMultiplayerGame(currentUser.id);
+        if (result.success) {
+            document.getElementById('gameCode').textContent = result.data.game_code;
+            openModal('createGameModal');
+        } else {
+            alert('Error creating game: ' + result.error);
+        }
+    };
+
+    window.showJoinMultiplayerModal = function() {
+        openModal('joinGameModal');
+    };
+
+    window.joinMultiplayerGame = async function() {
+        const gameCode = document.getElementById('gameCodeInput').value.toUpperCase();
+        if (gameCode.length !== 6) {
+            alert('Invalid game code');
+            return;
+        }
+        // Redirect to multiplayer game with code
+        window.location.href = `multiplayer.html?code=${gameCode}`;
+    };
+
+    window.copyGameCode = function() {
+        const code = document.getElementById('gameCode').textContent;
+        navigator.clipboard.writeText(code);
+        alert('Game code copied to clipboard!');
+    };
+
+    window.openModal = function(modalId) {
+        document.getElementById(modalId).classList.add('active');
+    };
+
+    window.closeModal = function(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    };
+
+    // Initialize app
+    init();
+</script>
+
+</body>
+</html>
