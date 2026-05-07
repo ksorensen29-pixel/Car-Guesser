@@ -239,6 +239,12 @@ function RevealCurrent() {
   if (currentCar !== null) {
     document.getElementById("answer").textContent =
       "Car Name: " + currentCar.name + " | Year: " + currentCar.year + " | Country: " + currentCar.country;
+    
+    // Auto-fill the form fields
+    document.getElementById("fname").value = currentCar.name;
+    document.getElementById("lname").value = currentCar.year;
+    document.getElementById("country").value = currentCar.country;
+    document.getElementById("selectedCountry").textContent = "Selected: " + currentCar.country;
   }
 }
 
