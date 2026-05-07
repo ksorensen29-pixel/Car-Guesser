@@ -244,7 +244,23 @@ function RevealCurrent() {
 
 function HintCurrent() {
   if (currentCar !== null) {
-    const hint = "Country: " + currentCar.country + " | Year: " + currentCar.year;
+    const carName = currentCar.name;
+    const yearDecade = Math.floor(currentCar.year / 10) * 10;
+    const letterCount = carName.length;
+    const firstLetter = carName.charAt(0);
+    const wordCount = carName.split(' ').length;
+    
+    // Show number of letters and first letter
+    let hint = `🚗 Car: ${letterCount} letters, starts with '${firstLetter}'`;
+    
+    // Add word count if multi-word
+    if (wordCount > 1) {
+      hint += ` (${wordCount} words)`;
+    }
+    
+    // Show decade instead of exact year
+    hint += ` | 📅 From the ${yearDecade}s`;
+    
     document.getElementById("answer").textContent = "Hint: " + hint;
   }
 }
