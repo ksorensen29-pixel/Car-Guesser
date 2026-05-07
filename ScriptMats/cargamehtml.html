@@ -113,9 +113,11 @@ label {
       <input type="text" id="fname" name="Car Name" list="carSuggestions" required><br>
       <datalist id="carSuggestions"></datalist>
       <label for="lname">Production Year:</label><br>
-      <input type="number" id="lname" name="Production Year" required><br>
+      <input type="number" id="lname" name="Production Year" list="yearSuggestions" required><br>
+      <datalist id="yearSuggestions"></datalist>
       <label for="country">Country of Origin:</label><br>
-      <input type="text" id="country" name="Country" required><br><br>
+      <input type="text" id="country" name="Country" list="countrySuggestions" required><br><br>
+      <datalist id="countrySuggestions"></datalist>
       <input type="submit" value="Submit">
     </form> 
 
@@ -170,12 +172,37 @@ function updateScore() {
 }
 
 function displayCarNames() {
-  const datalist = document.getElementById("carSuggestions");
-  datalist.innerHTML = "";
+  const carDatalist = document.getElementById("carSuggestions");
+  const yearDatalist = document.getElementById("yearSuggestions");
+  const countryDatalist = document.getElementById("countrySuggestions");
+  
+  carDatalist.innerHTML = "";
+  yearDatalist.innerHTML = "";
+  countryDatalist.innerHTML = "";
+  
+  // Get unique years and countries
+  const uniqueYears = [...new Set(cars.map(car => car.year))].sort((a, b) => a - b);
+  const uniqueCountries = [...new Set(cars.map(car => car.country))].sort();
+  
+  // Populate car names
   cars.forEach(car => {
     const option = document.createElement("option");
     option.value = car.name;
-    datalist.appendChild(option);
+    carDatalist.appendChild(option);
+  });
+  
+  // Populate years
+  uniqueYears.forEach(year => {
+    const option = document.createElement("option");
+    option.value = year;
+    yearDatalist.appendChild(option);
+  });
+  
+  // Populate countries
+  uniqueCountries.forEach(country => {
+    const option = document.createElement("option");
+    option.value = country;
+    countryDatalist.appendChild(option);
   });
 }
 
