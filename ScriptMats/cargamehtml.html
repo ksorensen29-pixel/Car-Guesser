@@ -58,28 +58,35 @@ button:hover {
   color: whitesmoke;
 }
 form {
-  margin: 20px 0;
-  padding: 20px;
+  margin: 20px auto;
+  padding: 30px;
   background-color: rgb(80, 80, 80);
   border-radius: 7px;
-  display: inline-block;
+  display: block;
+  max-width: 600px;
+  text-align: center;
 }
 form input[type="text"], form input[type="number"] {
-  padding: 8px;
-  margin: 5px 0;
+  padding: 12px;
+  margin: 10px auto;
   border-radius: 4px;
   border: 1px solid rgb(143, 143, 143);
-  width: 200px;
+  width: 100%;
+  max-width: 350px;
+  font-size: 16px;
+  box-sizing: border-box;
 }
 form input[type="submit"] {
   background-color: whitesmoke;
   color: rgb(143, 143, 143);
-  padding: 8px 20px;
+  padding: 12px 40px;
   border-radius: 4px;
   border: none;
   cursor: pointer;
   font-weight: bold;
   transition: 0.3s;
+  font-size: 18px;
+  margin-top: 15px;
 }
 form input[type="submit"]:hover {
   background-color: rgb(200, 200, 200);
@@ -89,6 +96,7 @@ label {
   font-weight: bold;
   display: block;
   margin-top: 10px;
+  font-size: 18px;
 }
 #mapContainer {
   width: 100%;
@@ -164,8 +172,12 @@ let currentCar = null;
 let score = 0;
 let map = null;
 let geoJsonLayer = null;
+let countriesWithCars = [];
 
 function initializeMap() {
+  // Get list of countries that have cars
+  countriesWithCars = [...new Set(cars.map(car => car.country))];
+  
   map = L.map('mapContainer').setView([20, 0], 2);
   
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -177,23 +189,37 @@ function initializeMap() {
     .then(response => response.json())
     .then(data => {
       geoJsonLayer = L.geoJson(data, {
-        style: {
-          color: 'rgb(143, 143, 143)',
-          weight: 2,
-          opacity: 0.8,
-          fillOpacity: 0.5
+        style: function(feature) {
+          const countryName = feature.properties.ADMIN;
+          const hasCarFromCountry = countriesWithCars.includes(countryName);
+          
+          return {
+            color: hasCarFromCountry ? 'rgb(143, 143, 143)' : 'rgb(100, 100, 100)',
+            weight: hasCarFromCountry ? 2 : 1,
+            opacity: hasCarFromCountry ? 0.8 : 0.4,
+            fillOpacity: hasCarFromCountry ? 0.5 : 0.2,
+            fillColor: hasCarFromCountry ? 'rgb(100, 150, 100)' : 'rgb(80, 80, 80)'
+          };
         },
         onEachFeature: function(feature, layer) {
           const countryName = feature.properties.ADMIN;
-          layer.on('click', function() {
-            selectCountry(countryName);
-          });
-          layer.on('mouseover', function() {
-            layer.setStyle({ fillOpacity: 0.8, weight: 3 });
-          });
-          layer.on('mouseout', function() {
-            layer.setStyle({ fillOpacity: 0.5, weight: 2 });
-          });
+          const hasCarFromCountry = countriesWithCars.includes(countryName);
+          
+          if (hasCarFromCountry) {
+            layer.on('click', function() {
+              selectCountry(countryName);
+            });
+            layer.on('mouseover', function() {
+              layer.setStyle({ fillOpacity: 0.8, weight: 3 });
+            });
+            layer.on('mouseout', function() {
+              layer.setStyle({ fillOpacity: 0.5, weight: 2 });
+            });
+          } else {
+            layer.on('mouseover', function() {
+              layer.bindPopup('No cars from this country').openPopup();
+            });
+          }
         }
       }).addTo(map);
     });
