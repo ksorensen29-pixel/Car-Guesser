@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Car Guesser Game</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <style>
 h1 {
@@ -88,6 +90,22 @@ label {
   display: block;
   margin-top: 10px;
 }
+#mapContainer {
+  width: 100%;
+  max-width: 600px;
+  height: 400px;
+  margin: 20px auto;
+  border-radius: 7px;
+  overflow: hidden;
+  border: 2px solid rgb(143, 143, 143);
+}
+#selectedCountry {
+  font-size: 16px;
+  color: rgb(100, 200, 100);
+  font-weight: bold;
+  margin-top: 10px;
+  text-align: center;
+}
 </style>
 <body style="font-family: sans-serif; background-color:rgb(61, 61, 61);">
     <h1><b>CARGUESSER</b></h1>
@@ -115,9 +133,10 @@ label {
       <label for="lname">Production Year:</label><br>
       <input type="number" id="lname" name="Production Year" list="yearSuggestions" required><br>
       <datalist id="yearSuggestions"></datalist>
-      <label for="country">Country of Origin:</label><br>
-      <input type="text" id="country" name="Country" list="countrySuggestions" required><br><br>
-      <datalist id="countrySuggestions"></datalist>
+      <label>Country of Origin (Click on map):</label>
+      <div id="mapContainer"></div>
+      <div id="selectedCountry">No country selected</div>
+      <input type="hidden" id="country" name="Country" required><br><br>
       <input type="submit" value="Submit">
     </form> 
 
@@ -143,6 +162,47 @@ const cars = [
 
 let currentCar = null;
 let score = 0;
+let map = null;
+let geoJsonLayer = null;
+
+function initializeMap() {
+  map = L.map('mapContainer').setView([20, 0], 2);
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+  
+  fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+    .then(response => response.json())
+    .then(data => {
+      geoJsonLayer = L.geoJson(data, {
+        style: {
+          color: 'rgb(143, 143, 143)',
+          weight: 2,
+          opacity: 0.8,
+          fillOpacity: 0.5
+        },
+        onEachFeature: function(feature, layer) {
+          const countryName = feature.properties.ADMIN;
+          layer.on('click', function() {
+            selectCountry(countryName);
+          });
+          layer.on('mouseover', function() {
+            layer.setStyle({ fillOpacity: 0.8, weight: 3 });
+          });
+          layer.on('mouseout', function() {
+            layer.setStyle({ fillOpacity: 0.5, weight: 2 });
+          });
+        }
+      }).addTo(map);
+    });
+}
+
+function selectCountry(countryName) {
+  document.getElementById('country').value = countryName;
+  document.getElementById('selectedCountry').textContent = 'Selected: ' + countryName;
+}
 
 function loadRandomCar() {
   const index = Math.floor(Math.random() * cars.length);
@@ -174,15 +234,12 @@ function updateScore() {
 function displayCarNames() {
   const carDatalist = document.getElementById("carSuggestions");
   const yearDatalist = document.getElementById("yearSuggestions");
-  const countryDatalist = document.getElementById("countrySuggestions");
   
   carDatalist.innerHTML = "";
   yearDatalist.innerHTML = "";
-  countryDatalist.innerHTML = "";
   
-  // Get unique years and countries
+  // Get unique years
   const uniqueYears = [...new Set(cars.map(car => car.year))].sort((a, b) => a - b);
-  const uniqueCountries = [...new Set(cars.map(car => car.country))].sort();
   
   // Populate car names
   cars.forEach(car => {
@@ -197,19 +254,13 @@ function displayCarNames() {
     option.value = year;
     yearDatalist.appendChild(option);
   });
-  
-  // Populate countries
-  uniqueCountries.forEach(country => {
-    const option = document.createElement("option");
-    option.value = country;
-    countryDatalist.appendChild(option);
-  });
 }
 
 window.onload = function() {
   loadRandomCar();
   updateScore();
   displayCarNames();
+  initializeMap();
 };
 
 document.getElementById("guessForm").addEventListener("submit", function (e) {
