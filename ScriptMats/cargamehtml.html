@@ -322,7 +322,10 @@ document.getElementById("guessForm").addEventListener("submit", function (e) {
     score++;
     updateScore();
     document.getElementById("answer").textContent = "✓ Correct! Moving to next car...";
-    setTimeout(loadRandomCar, 1500);
+    setTimeout(function() {
+      loadRandomCar();
+      document.getElementById("img").scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 1500);
   } else {
     let feedback = "✗ Incorrect. ";
     if (guess !== currentCar.name.toLowerCase()) {
