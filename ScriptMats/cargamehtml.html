@@ -108,17 +108,13 @@ label {
 
     <p id="answer"></p>
 
-    <div id="carList" style="background-color: rgb(80, 80, 80); padding: 15px; border-radius: 7px; margin: 20px auto; max-width: 400px; text-align: left;">
-      <p style="text-align: center; font-weight: bold; margin-top: 0;">Available Cars:</p>
-      <ul id="carNames" style="color: whitesmoke; padding-left: 20px; margin: 10px 0;"></ul>
-    </div>
-
     <form id="guessForm">
-      <label for="fname">Car Name:</label>
-      <input type="text" id="fname" name="Car Name" required><br>
-      <label for="lname">Production Year:</label>
+      <label for="fname">Car Name:</label><br>
+      <input type="text" id="fname" name="Car Name" list="carSuggestions" required><br>
+      <datalist id="carSuggestions"></datalist>
+      <label for="lname">Production Year:</label><br>
       <input type="number" id="lname" name="Production Year" required><br>
-      <label for="country">Country of Origin:</label>
+      <label for="country">Country of Origin:</label><br>
       <input type="text" id="country" name="Country" required><br><br>
       <input type="submit" value="Submit">
     </form> 
@@ -174,12 +170,12 @@ function updateScore() {
 }
 
 function displayCarNames() {
-  const carNamesList = document.getElementById("carNames");
-  carNamesList.innerHTML = "";
+  const datalist = document.getElementById("carSuggestions");
+  datalist.innerHTML = "";
   cars.forEach(car => {
-    const listItem = document.createElement("li");
-    listItem.textContent = car.name;
-    carNamesList.appendChild(listItem);
+    const option = document.createElement("option");
+    option.value = car.name;
+    datalist.appendChild(option);
   });
 }
 
