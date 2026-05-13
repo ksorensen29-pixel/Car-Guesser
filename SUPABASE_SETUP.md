@@ -5,7 +5,7 @@ Supabase is an open-source Firebase alternative built on PostgreSQL. It provides
 
 **Why Supabase?**
 - PostgreSQL database (powerful and familiar)
-- Google Sign-In integration
+- Email magic-link authentication
 - Real-time database subscriptions
 - REST API and WebSocket support
 - Free tier is generous
@@ -15,7 +15,7 @@ Supabase is an open-source Firebase alternative built on PostgreSQL. It provides
 ## STEP 1: Create a Supabase Account
 1. Open: https://supabase.com/
 2. Click **"Sign up"** (top right)
-3. Sign in with GitHub or Google
+3. Sign in with GitHub, Google, or email (any works for your Supabase account)
 4. Create an organization/account
 
 ---
@@ -45,20 +45,14 @@ Supabase is an open-source Firebase alternative built on PostgreSQL. It provides
 
 ---
 
-## STEP 4: Enable Google Authentication
+## STEP 4: Configure Email Authentication
 1. Go to **Authentication → Providers**
-2. Click **"Google"**
-3. Toggle **"Enable"** to ON
-4. Enter Google OAuth credentials:
-   - Get from: https://console.cloud.google.com/
-   - Create OAuth 2.0 credentials (Web application)
-   - Authorized redirect URIs: `https://your-project.supabase.co/auth/v1/callback`
+2. Click **"Email"**
+3. Ensure **"Enable Email provider"** is ON
+4. Set **"Confirm email"** based on your preference:
+   - ON for safer production auth (recommended)
+   - OFF for fast local testing
 5. Click **"Save"**
-
-**OR** Use Supabase-managed Google OAuth (easier):
-1. Click **"Google"** provider
-2. Keep "Confirm Google OAuth details" toggled
-3. Click **"Save"**
 
 ---
 
@@ -192,7 +186,7 @@ export const supabaseConfig = {
 
 ## What We'll Build Next
 
-1. **Login Page** - Google Sign-In with Supabase Auth
+1. **Login Page** - Email magic-link sign-in with Supabase Auth
 2. **Dashboard** - Leaderboard + user profile
 3. **Multiplayer Mode** - Real-time competitive games
 4. **Score Tracking** - Store all game results in database
@@ -209,9 +203,9 @@ export const supabaseConfig = {
 - Check your project URL
 - Verify network is working
 
-**"Google OAuth not working"**
-- Make sure redirect URI matches exactly
-- Check OAuth credentials are correct
+**"Magic link email not arriving"**
+- Check spam/junk folder
+- Verify email provider is enabled in Supabase Authentication settings
 
 ---
 
