@@ -10,12 +10,12 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 export const supabase = createClient(supabaseConfig.url, supabaseConfig.anon_key);
 
 // Auth helper functions
-export async function signInWithGoogle() {
+export async function signInWithEmail(email) {
   try {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email,
       options: {
-        redirectTo: `${window.location.origin}/dashboard.html`
+        emailRedirectTo: window.location.href
       }
     });
     

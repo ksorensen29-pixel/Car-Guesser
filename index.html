@@ -130,13 +130,14 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_BAliVVfUjkf3zZarqfRTPA_eSRTnEFk';
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const dashboardUrl = new URL('ScriptMats/dashboard.html', window.location.href).href;
 
     // Check if user is already logged in
     async function checkUser() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
             // Redirect to dashboard
-            window.location.href = 'dashboard.html';
+            window.location.href = dashboardUrl;
         }
     }
 
@@ -160,7 +161,7 @@
             const { error } = await supabase.auth.signInWithOtp({
                 email,
                 options: {
-                    emailRedirectTo: window.location.origin + '/dashboard.html'
+                    emailRedirectTo: window.location.href
                 }
             });
 
