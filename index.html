@@ -42,7 +42,16 @@
             font-size: 14px;
         }
 
-        .google-signin-btn {
+        .email-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d0d5dd;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .email-signin-btn {
             width: 100%;
             padding: 12px 20px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -55,12 +64,12 @@
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .google-signin-btn:hover {
+        .email-signin-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .google-signin-btn:disabled {
+        .email-signin-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
@@ -97,8 +106,16 @@
     <h1>🏎️ CARGUESSER</h1>
     <p class="subtitle">Guess the cars. Compete with friends. Dominate the leaderboard.</p>
     
-    <button class="google-signin-btn" id="signInBtn" onclick="handleGoogleSignIn()">
-        🔐 Sign in with Google
+    <input
+        class="email-input"
+        id="emailInput"
+        type="email"
+        placeholder="Enter your email"
+        autocomplete="email"
+    />
+
+    <button class="email-signin-btn" id="signInBtn" onclick="handleEmailSignIn()">
+        🔐 Sign in with Email
     </button>
 
     <div id="status" class="status"></div>
@@ -123,19 +140,27 @@
         }
     }
 
-    window.handleGoogleSignIn = async function() {
+    window.handleEmailSignIn = async function() {
         try {
             const signInBtn = document.getElementById('signInBtn');
             const statusDiv = document.getElementById('status');
+            const emailInput = document.getElementById('emailInput');
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Please enter an email address.';
+                return;
+            }
             
             signInBtn.disabled = true;
             statusDiv.className = 'status loading';
-            statusDiv.textContent = 'Signing in...';
+            statusDiv.textContent = 'Sending sign-in link...';
 
-            const { data, error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
                 options: {
-                    redirectTo: window.location.origin + '/dashboard.html'
+                    emailRedirectTo: window.location.origin + '/dashboard.html'
                 }
             });
 
@@ -144,7 +169,8 @@
             }
 
             statusDiv.className = 'status success';
-            statusDiv.textContent = 'Redirecting...';
+            statusDiv.textContent = 'Check your email for the sign-in link.';
+            signInBtn.disabled = false;
 
         } catch (error) {
             console.error('Sign in error:', error);
