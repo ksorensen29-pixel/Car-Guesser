@@ -12,7 +12,7 @@ export const supabase = createClient(supabaseConfig.url, supabaseConfig.anon_key
 // Auth helper functions
 export async function signInWithEmail(email) {
   try {
-    const dashboardUrl = new URL('dashboard.html', window.location.href).href;
+    const dashboardUrl = new URL('/dashboard.html', window.location.origin).href;
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {

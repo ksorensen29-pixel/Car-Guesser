@@ -130,7 +130,7 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_BAliVVfUjkf3zZarqfRTPA_eSRTnEFk';
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const dashboardUrl = new URL('dashboard.html', window.location.href).href;
+    const dashboardUrl = new URL('/dashboard.html', window.location.origin).href;
 
     // Check if user is already logged in
     async function checkUser() {
