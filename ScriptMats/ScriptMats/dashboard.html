@@ -7,7 +7,10 @@
 </head>
 <body>
   <script>
-    const target = new URL('/dashboard.html', window.location.origin);
+    const path = window.location.pathname;
+    const scriptMatsIndex = path.indexOf('/ScriptMats/');
+    const appRoot = scriptMatsIndex !== -1 ? path.slice(0, scriptMatsIndex + 1) : '/';
+    const target = new URL('dashboard.html', new URL(appRoot, window.location.origin));
     target.search = window.location.search;
     target.hash = window.location.hash;
     window.location.replace(target.href);

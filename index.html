@@ -130,7 +130,20 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_BAliVVfUjkf3zZarqfRTPA_eSRTnEFk';
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const dashboardUrl = new URL('/dashboard.html', window.location.origin).href;
+
+    function getAppRootPath() {
+        const { pathname } = window.location;
+        const scriptMatsIndex = pathname.indexOf('/ScriptMats/');
+        if (scriptMatsIndex !== -1) {
+            return pathname.slice(0, scriptMatsIndex + 1);
+        }
+        if (pathname.endsWith('.html')) {
+            return pathname.slice(0, pathname.lastIndexOf('/') + 1);
+        }
+        return pathname.endsWith('/') ? pathname : `${pathname}/`;
+    }
+
+    const dashboardUrl = new URL('dashboard.html', new URL(getAppRootPath(), window.location.origin)).href;
 
     // Check if user is already logged in
     async function checkUser() {

@@ -9,10 +9,22 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 export const supabase = createClient(supabaseConfig.url, supabaseConfig.anon_key);
 
+function getAppRootPath() {
+  const { pathname } = window.location;
+  const scriptMatsIndex = pathname.indexOf('/ScriptMats/');
+  if (scriptMatsIndex !== -1) {
+    return pathname.slice(0, scriptMatsIndex + 1);
+  }
+  if (pathname.endsWith('.html')) {
+    return pathname.slice(0, pathname.lastIndexOf('/') + 1);
+  }
+  return pathname.endsWith('/') ? pathname : `${pathname}/`;
+}
+
 // Auth helper functions
 export async function signInWithEmail(email) {
   try {
-    const dashboardUrl = new URL('/dashboard.html', window.location.origin).href;
+    const dashboardUrl = new URL('dashboard.html', new URL(getAppRootPath(), window.location.origin)).href;
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {

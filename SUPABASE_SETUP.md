@@ -154,6 +154,8 @@ CREATE POLICY "Players can update their games"
 2. Add to "Redirect URLs":
    - `http://localhost:8000`
    - `http://127.0.0.1:8000`
+   - `https://ksorensen29-pixel.github.io/Car-Guesser/dashboard.html` (GitHub Pages)
+   - `https://<your-codespace>-8000.app.github.dev/dashboard.html` (Codespaces)
 
 ---
 
