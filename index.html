@@ -161,7 +161,7 @@
             const { error } = await supabase.auth.signInWithOtp({
                 email,
                 options: {
-                    emailRedirectTo: window.location.href
+                    emailRedirectTo: dashboardUrl
                 }
             });
 
@@ -183,6 +183,12 @@
             signInBtn.disabled = false;
         }
     };
+
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+            window.location.href = dashboardUrl;
+        }
+    });
 
     // Check user on page load
     checkUser();

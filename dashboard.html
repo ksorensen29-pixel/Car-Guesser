@@ -413,6 +413,14 @@
         }
     }
 
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+            currentUser = session.user;
+            displayDashboard();
+            loadLeaderboard();
+        }
+    });
+
     async function checkAuthStatus() {
         const user = await getCurrentUser();
         if (user) {
