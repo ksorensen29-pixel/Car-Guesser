@@ -524,14 +524,14 @@
     };
 
     window.joinMultiplayerGame = async function() {
-        const gameCode = document.getElementById('gameCodeInput').value.toUpperCase();
+        const gameCode = document.getElementById('gameCodeInput').value.trim().toUpperCase();
         if (gameCode.length !== 6) {
             alert('Invalid game code');
             return;
         }
         const result = await joinMultiplayerGame(gameCode, currentUser.id);
         if (!result.success || !result.data) {
-            alert('Unable to join game. Check the code and try again.');
+            alert('Unable to join game: ' + (result.error || 'Check the code and try again.'));
             return;
         }
         closeModal('joinGameModal');

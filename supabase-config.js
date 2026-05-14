@@ -140,17 +140,27 @@ export async function createMultiplayerGame(player1Id) {
 
 export async function joinMultiplayerGame(gameCode, player2Id) {
   try {
+    const normalizedCode = gameCode.trim().toUpperCase();
     const { data, error } = await supabase
       .from('multiplayer_games')
       .update({ 
         player_2_id: player2Id,
         status: 'active'
       })
-      .eq('game_code', gameCode)
-      .select();
+      .eq('game_code', normalizedCode)
+      .eq('status', 'waiting')
+      .is('player_2_id', null)
+      .select()
+      .maybeSingle();
     
     if (error) throw error;
-    return { success: true, data: data[0] };
+    if (!data) {
+      return {
+        success: false,
+        error: 'Game not found or already joined. If this keeps happening, update your Supabase multiplayer RLS policy to allow joining waiting games.'
+      };
+    }
+    return { success: true, data };
   } catch (error) {
     console.error('Join game error:', error.message);
     return { success: false, error: error.message };

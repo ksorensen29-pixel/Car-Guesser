@@ -141,10 +141,33 @@ CREATE POLICY "Players can view their games"
   ON multiplayer_games FOR SELECT
   USING (auth.uid() = player_1_id OR auth.uid() = player_2_id);
 
--- Allow players to update their games
-CREATE POLICY "Players can update their games"
+-- Allow host or joined player to update their own games
+CREATE POLICY "Players can update active games"
   ON multiplayer_games FOR UPDATE
   USING (auth.uid() = player_1_id OR auth.uid() = player_2_id);
+
+-- Allow authenticated users to join a waiting game by setting themselves as player_2
+CREATE POLICY "Authenticated users can join waiting games"
+  ON multiplayer_games FOR UPDATE
+  USING (player_2_id IS NULL AND status = 'waiting')
+  WITH CHECK (auth.uid() = player_2_id AND status = 'active');
+```
+
+If you already created the old policy, run this once to replace it safely:
+
+```sql
+DROP POLICY IF EXISTS "Players can update their games" ON multiplayer_games;
+DROP POLICY IF EXISTS "Players can update active games" ON multiplayer_games;
+DROP POLICY IF EXISTS "Authenticated users can join waiting games" ON multiplayer_games;
+
+CREATE POLICY "Players can update active games"
+  ON multiplayer_games FOR UPDATE
+  USING (auth.uid() = player_1_id OR auth.uid() = player_2_id);
+
+CREATE POLICY "Authenticated users can join waiting games"
+  ON multiplayer_games FOR UPDATE
+  USING (player_2_id IS NULL AND status = 'waiting')
+  WITH CHECK (auth.uid() = player_2_id AND status = 'active');
 ```
 
 ---
