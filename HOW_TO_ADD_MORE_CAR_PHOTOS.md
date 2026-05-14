@@ -9,22 +9,22 @@ Follow these steps to add new cars to the Car Guesser game:
 - Place it in the `ScriptMats/photos/` folder
 
 ## Step 2: Update the Game File
-1. Open `ScriptMats/cargamehtml.html` in your editor
+1. Open `cargamehtml.html` in your editor
 2. Find the `const cars = [` array (around line 122)
 3. Add a new entry at the end (before the closing `];`):
 
 ```javascript
-{ image: "photos/8.jpeg", name: "Car Model Name", year: 2023, country: "Country Name" }
+{ image: "ScriptMats/photos/8.jpeg", name: "Car Model Name", year: 2023, country: "Country Name" }
 ```
 
 **Example:**
 ```javascript
 const cars = [
-  { image: "photos/1.jpeg", name: "Porsche", year: 2020, country: "Germany" },
-  { image: "photos/2.jpeg", name: "Toyota Corolla", year: 2019, country: "Japan" },
+  { image: "ScriptMats/photos/1.jpeg", name: "Porsche", year: 2020, country: "Germany" },
+  { image: "ScriptMats/photos/2.jpeg", name: "Toyota Corolla", year: 2019, country: "Japan" },
   // ... other cars ...
-  { image: "photos/7.jpeg", name: "Lightning McQueen", year: 2006, country: "USA" },
-  { image: "photos/8.jpeg", name: "Your Car Model", year: 2023, country: "Your Country" }  // <-- Add here
+  { image: "ScriptMats/photos/7.jpeg", name: "Lightning McQueen", year: 2006, country: "USA" },
+  { image: "ScriptMats/photos/8.jpeg", name: "Your Car Model", year: 2023, country: "Your Country" }  // <-- Add here
 ];
 ```
 
@@ -47,10 +47,11 @@ git push
 ```
 Car-Guesser/
 ├── ScriptMats/
-│   ├── cargamehtml.html       (Main game file)
+├── cargamehtml.html           (Main game file)
+├── ScriptMats/
 │   ├── carguesserlogic.js     (Empty - logic is in HTML)
 │   ├── base
-│   └── photos/                 (Car images folder)
+│   └── photos/                (Car images folder)
 │       ├── 1.jpeg
 │       ├── 2.jpeg
 │       ├── 3.jpeg

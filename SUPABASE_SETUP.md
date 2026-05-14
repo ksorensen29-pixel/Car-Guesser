@@ -159,7 +159,7 @@ CREATE POLICY "Players can update their games"
 
 ## STEP 8: Create a .env or config file
 
-Create a file in `/ScriptMats/supabase-config.js`:
+Create a file at `/supabase-config.js`:
 
 ```javascript
 export const supabaseConfig = {

@@ -398,8 +398,9 @@
         getCurrentUser, 
         updateUserProfile,
         getLeaderboard,
-        createMultiplayerGame
-    } from './ScriptMats/supabase-config.js';
+        createMultiplayerGame,
+        joinMultiplayerGame
+    } from './supabase-config.js';
 
     let currentUser = null;
 
@@ -520,8 +521,13 @@
             alert('Invalid game code');
             return;
         }
-        // Redirect to multiplayer game with code
-        window.location.href = `multiplayer.html?code=${gameCode}`;
+        const result = await joinMultiplayerGame(gameCode, currentUser.id);
+        if (!result.success || !result.data) {
+            alert('Unable to join game. Check the code and try again.');
+            return;
+        }
+        closeModal('joinGameModal');
+        window.location.href = 'cargamehtml.html';
     };
 
     window.copyGameCode = function() {
