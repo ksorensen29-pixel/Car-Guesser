@@ -86,6 +86,25 @@ export async function updateUserProfile(userId, profile) {
   }
 }
 
+async function ensureUserRecord() {
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  if (!user) throw new Error('Not signed in.');
+
+  const profile = {
+    email: user.email,
+    name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+    photo_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null
+  };
+
+  const profileResult = await updateUserProfile(user.id, profile);
+  if (!profileResult.success) {
+    throw new Error(profileResult.error || 'Unable to sync user profile.');
+  }
+
+  return user;
+}
+
 export async function saveGameScore(userId, score, carsGuessed, gameType = 'single') {
   try {
     const { data, error } = await supabase
@@ -123,18 +142,14 @@ export async function getLeaderboard(limit = 10) {
 
 export async function createMultiplayerGame(player1Id) {
   try {
-    const profileResult = await updateUserProfile(player1Id, {});
-    if (!profileResult.success) {
-      throw new Error(profileResult.error || 'Unable to sync user profile.');
-    }
-
+    const user = await ensureUserRecord();
     const gameCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     const { data, error } = await supabase
       .from('multiplayer_games')
       .insert({
         game_code: gameCode,
-        player_1_id: player1Id,
+        player_1_id: user.id,
         status: 'waiting'
       })
       .select();
@@ -150,15 +165,15 @@ export async function createMultiplayerGame(player1Id) {
 export async function joinMultiplayerGame(gameCode, player2Id) {
   try {
     const normalizedCode = gameCode.trim().toUpperCase();
-    const profileResult = await updateUserProfile(player2Id, {});
-    if (!profileResult.success) {
-      throw new Error(profileResult.error || 'Unable to sync user profile.');
+    const user = await ensureUserRecord();
+    if (player2Id && player2Id !== user.id) {
+      console.warn('Provided player ID does not match signed-in user.');
     }
 
     const { data, error } = await supabase
       .from('multiplayer_games')
       .update({ 
-        player_2_id: player2Id,
+        player_2_id: user.id,
         status: 'active'
       })
       .eq('game_code', normalizedCode)
