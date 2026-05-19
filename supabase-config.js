@@ -65,14 +65,18 @@ export async function getCurrentUser() {
 // Database helper functions
 export async function updateUserProfile(userId, profile) {
   try {
+    if (!userId) {
+      throw new Error('User ID is required.');
+    }
+
+    const payload = { id: userId };
+    if (profile?.email) payload.email = profile.email;
+    if (profile?.name) payload.name = profile.name;
+    if (profile?.photo_url) payload.photo_url = profile.photo_url;
+
     const { data, error } = await supabase
       .from('users')
-      .upsert({ 
-        id: userId, 
-        email: profile.email,
-        name: profile.name,
-        photo_url: profile.photo_url
-      }, { onConflict: 'id' });
+      .upsert(payload, { onConflict: 'id' });
     
     if (error) throw error;
     return { success: true, data };
@@ -119,6 +123,11 @@ export async function getLeaderboard(limit = 10) {
 
 export async function createMultiplayerGame(player1Id) {
   try {
+    const profileResult = await updateUserProfile(player1Id, {});
+    if (!profileResult.success) {
+      throw new Error(profileResult.error || 'Unable to sync user profile.');
+    }
+
     const gameCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     const { data, error } = await supabase
@@ -141,6 +150,11 @@ export async function createMultiplayerGame(player1Id) {
 export async function joinMultiplayerGame(gameCode, player2Id) {
   try {
     const normalizedCode = gameCode.trim().toUpperCase();
+    const profileResult = await updateUserProfile(player2Id, {});
+    if (!profileResult.success) {
+      throw new Error(profileResult.error || 'Unable to sync user profile.');
+    }
+
     const { data, error } = await supabase
       .from('multiplayer_games')
       .update({ 

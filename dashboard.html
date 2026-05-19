@@ -408,14 +408,22 @@
     async function init() {
         await checkAuthStatus();
         if (currentUser) {
+            const profileResult = await syncUserProfile();
+            if (!profileResult.success) {
+                console.warn('Profile sync error:', profileResult.error);
+            }
             displayDashboard();
             loadLeaderboard();
         }
     }
 
-    supabase.auth.onAuthStateChange((event, session) => {
+    supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
             currentUser = session.user;
+            const profileResult = await syncUserProfile();
+            if (!profileResult.success) {
+                console.warn('Profile sync error:', profileResult.error);
+            }
             displayDashboard();
             loadLeaderboard();
         }
@@ -426,6 +434,20 @@
         if (user) {
             currentUser = user;
         }
+    }
+
+    async function syncUserProfile() {
+        if (!currentUser) {
+            return { success: false, error: 'Not signed in.' };
+        }
+
+        const profile = {
+            email: currentUser.email,
+            name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
+            photo_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null
+        };
+
+        return await updateUserProfile(currentUser.id, profile);
     }
 
     window.handleEmailSignIn = async function() {
@@ -510,6 +532,11 @@
     };
 
     window.showCreateMultiplayerModal = async function() {
+        const profileResult = await syncUserProfile();
+        if (!profileResult.success) {
+            alert('Unable to sync your profile: ' + profileResult.error);
+            return;
+        }
         const result = await createMultiplayerGame(currentUser.id);
         if (result.success) {
             document.getElementById('gameCode').textContent = result.data.game_code;
@@ -527,6 +554,11 @@
         const gameCode = document.getElementById('gameCodeInput').value.trim().toUpperCase();
         if (gameCode.length !== 6) {
             alert('Invalid game code');
+            return;
+        }
+        const profileResult = await syncUserProfile();
+        if (!profileResult.success) {
+            alert('Unable to sync your profile: ' + profileResult.error);
             return;
         }
         const result = await joinMultiplayerGame(gameCode, currentUser.id);

@@ -120,6 +120,11 @@ CREATE POLICY "Users can update own profile"
   ON users FOR UPDATE
   USING (auth.uid() = id);
 
+-- Allow users to insert their own profile
+CREATE POLICY "Users can insert own profile"
+  ON users FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
 -- Enable RLS on game_scores
 ALTER TABLE game_scores ENABLE ROW LEVEL SECURITY;
 
