@@ -57,6 +57,17 @@ button:hover {
   margin: 10px 0;
   color: whitesmoke;
 }
+#multiplayerInfo {
+  display: none;
+  margin: 10px auto 20px;
+  padding: 10px 16px;
+  background-color: rgb(80, 80, 80);
+  border-radius: 7px;
+  max-width: 600px;
+}
+#multiplayerInfo strong {
+  color: rgb(100, 200, 100);
+}
 form {
   margin: 20px auto;
   padding: 30px;
@@ -123,6 +134,10 @@ label {
     <hr>
     
     <div id="score">Score: 0</div>
+    <div id="multiplayerInfo">
+      <div>Multiplayer Code: <strong id="multiplayerCode"></strong></div>
+      <button onclick="copyMultiplayerCode()">Copy Code</button>
+    </div>
     
     <button onclick="RevealCurrent()">Reveal</button>
     <button onclick="loadRandomCar()">Skip</button>
@@ -173,6 +188,35 @@ let score = 0;
 let map = null;
 let geoJsonLayer = null;
 let countriesWithCars = [];
+let multiplayerContext = null;
+
+function loadMultiplayerContext() {
+  const params = new URLSearchParams(window.location.search);
+  const gameId = params.get('gameId') || sessionStorage.getItem('multiplayerGameId');
+  const gameCode = params.get('gameCode') || sessionStorage.getItem('multiplayerGameCode');
+  const role = params.get('role') || sessionStorage.getItem('multiplayerRole');
+
+  if (gameId) sessionStorage.setItem('multiplayerGameId', gameId);
+  if (gameCode) sessionStorage.setItem('multiplayerGameCode', gameCode);
+  if (role) sessionStorage.setItem('multiplayerRole', role);
+
+  if (gameId || gameCode) {
+    multiplayerContext = { gameId, gameCode, role };
+    if (gameCode) {
+      document.getElementById('multiplayerCode').textContent = gameCode;
+      document.getElementById('multiplayerInfo').style.display = 'block';
+    }
+  }
+}
+
+function copyMultiplayerCode() {
+  if (!multiplayerContext?.gameCode) {
+    alert('No multiplayer code available.');
+    return;
+  }
+  navigator.clipboard.writeText(multiplayerContext.gameCode);
+  alert('Game code copied to clipboard!');
+}
 
 function initializeMap() {
   // Get list of countries that have cars
@@ -320,6 +364,7 @@ function displayCarNames() {
 }
 
 window.onload = function() {
+  loadMultiplayerContext();
   loadRandomCar();
   updateScore();
   displayCarNames();

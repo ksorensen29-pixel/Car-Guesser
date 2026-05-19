@@ -400,7 +400,7 @@
         getLeaderboard,
         createMultiplayerGame,
         joinMultiplayerGame
-    } from './supabase-config.js?v=20260519';
+    } from './supabase-config.js?v=20260519-2';
 
     let currentUser = null;
 
@@ -539,8 +539,11 @@
         }
         const result = await createMultiplayerGame(currentUser.id);
         if (result.success) {
-            document.getElementById('gameCode').textContent = result.data.game_code;
-            openModal('createGameModal');
+            const game = result.data;
+            sessionStorage.setItem('multiplayerGameId', game.id);
+            sessionStorage.setItem('multiplayerGameCode', game.game_code);
+            sessionStorage.setItem('multiplayerRole', 'host');
+            window.location.href = `cargamehtml.html?gameId=${encodeURIComponent(game.id)}&gameCode=${encodeURIComponent(game.game_code)}&role=host`;
         } else {
             alert('Error creating game: ' + result.error);
         }
@@ -567,7 +570,10 @@
             return;
         }
         closeModal('joinGameModal');
-        window.location.href = 'cargamehtml.html';
+        sessionStorage.setItem('multiplayerGameId', result.data.id);
+        sessionStorage.setItem('multiplayerGameCode', result.data.game_code);
+        sessionStorage.setItem('multiplayerRole', 'guest');
+        window.location.href = `cargamehtml.html?gameId=${encodeURIComponent(result.data.id)}&gameCode=${encodeURIComponent(result.data.game_code)}&role=guest`;
     };
 
     window.copyGameCode = function() {
