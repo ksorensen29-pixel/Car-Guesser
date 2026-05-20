@@ -68,6 +68,24 @@ button:hover {
 #multiplayerInfo strong {
   color: rgb(100, 200, 100);
 }
+#multiplayerStats {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+}
+#multiplayerStats div {
+  color: whitesmoke;
+}
+#matchStatus {
+  margin-top: 8px;
+  font-weight: bold;
+  color: rgb(100, 200, 100);
+  display: none;
+}
+#matchStatus.error {
+  color: #ffb3b3;
+}
 form {
   margin: 20px auto;
   padding: 30px;
@@ -136,12 +154,17 @@ label {
     <div id="score">Score: 0</div>
     <div id="multiplayerInfo">
       <div>Multiplayer Code: <strong id="multiplayerCode"></strong></div>
+      <div id="multiplayerStats">
+        <div>Opponent Score: <strong id="opponentScoreValue">0</strong></div>
+        <div>Time Left: <strong id="matchTimerValue">02:00</strong></div>
+      </div>
+      <div id="matchStatus"></div>
       <button onclick="copyMultiplayerCode()">Copy Code</button>
     </div>
     
-    <button onclick="RevealCurrent()">Reveal</button>
-    <button onclick="loadRandomCar()">Skip</button>
-    <button onclick="HintCurrent()">Hint</button>
+    <button id="revealBtn" onclick="RevealCurrent()">Reveal</button>
+    <button id="skipBtn" onclick="loadRandomCar()">Skip</button>
+    <button id="hintBtn" onclick="HintCurrent()">Hint</button>
 
     <br><br>
 
@@ -163,7 +186,17 @@ label {
       <input type="submit" value="Submit">
     </form> 
 
-<script>
+<script type="module">
+import { 
+  getCurrentUser,
+  getMultiplayerGame,
+  updateGameScore,
+  subscribeToGameUpdates,
+  finishMultiplayerGame
+} from './supabase-config.js?v=20260520-1';
+
+const MATCH_DURATION_SECONDS = 120;
+
 const cars = [
   { image: "ScriptMats/photos/1.jpeg", name: "Porsche", year: 2020, country: "Germany" },
   { image: "ScriptMats/photos/2.jpeg", name: "Toyota Corolla", year: 2019, country: "Japan" },
@@ -189,6 +222,14 @@ let map = null;
 let geoJsonLayer = null;
 let countriesWithCars = [];
 let multiplayerContext = null;
+let multiplayerGame = null;
+let localPlayerNumber = null;
+let opponentScore = 0;
+let matchEnded = false;
+let timerInterval = null;
+let matchEndTime = null;
+let currentUser = null;
+let gameSubscription = null;
 
 function loadMultiplayerContext() {
   const params = new URLSearchParams(window.location.search);
@@ -216,6 +257,45 @@ function copyMultiplayerCode() {
   }
   navigator.clipboard.writeText(multiplayerContext.gameCode);
   alert('Game code copied to clipboard!');
+}
+
+function determineLocalPlayerNumber(game) {
+  if (multiplayerContext?.role === 'host') return 1;
+  if (multiplayerContext?.role === 'guest') return 2;
+  if (currentUser?.id && game) {
+    if (game.player_1_id === currentUser.id) return 1;
+    if (game.player_2_id === currentUser.id) return 2;
+  }
+  return null;
+}
+
+function setMatchStatus(message, isError = false) {
+  const status = document.getElementById('matchStatus');
+  if (!status) return;
+  if (!message) {
+    status.textContent = '';
+    status.style.display = 'none';
+    status.className = '';
+    return;
+  }
+  status.textContent = message;
+  status.style.display = 'block';
+  status.className = isError ? 'error' : '';
+}
+
+function setGameplayEnabled(enabled) {
+  const form = document.getElementById("guessForm");
+  if (form) {
+    Array.from(form.elements).forEach(element => {
+      element.disabled = !enabled;
+    });
+  }
+  const revealBtn = document.getElementById("revealBtn");
+  const skipBtn = document.getElementById("skipBtn");
+  const hintBtn = document.getElementById("hintBtn");
+  [revealBtn, skipBtn, hintBtn].forEach(button => {
+    if (button) button.disabled = !enabled;
+  });
 }
 
 function initializeMap() {
@@ -338,6 +418,192 @@ function updateScore() {
   document.getElementById("score").textContent = "Score: " + score;
 }
 
+function updateOpponentScoreDisplay() {
+  const opponentScoreElement = document.getElementById("opponentScoreValue");
+  if (!opponentScoreElement) return;
+  if (!multiplayerContext?.gameId) return;
+  if (!multiplayerGame?.player_2_id && localPlayerNumber === 1) {
+    opponentScoreElement.textContent = '—';
+    return;
+  }
+  opponentScoreElement.textContent = opponentScore;
+}
+
+function syncScoresFromGame(game) {
+  if (!game) return;
+  const player1Score = Number.isFinite(game.player_1_score) ? game.player_1_score : 0;
+  const player2Score = Number.isFinite(game.player_2_score) ? game.player_2_score : 0;
+
+  if (localPlayerNumber === 1) {
+    opponentScore = player2Score;
+    if (score !== player1Score) {
+      score = player1Score;
+      updateScore();
+    }
+  } else if (localPlayerNumber === 2) {
+    opponentScore = player1Score;
+    if (score !== player2Score) {
+      score = player2Score;
+      updateScore();
+    }
+  }
+
+  updateOpponentScoreDisplay();
+}
+
+function formatTime(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function updateTimerDisplay() {
+  const timerElement = document.getElementById('matchTimerValue');
+  if (!timerElement) return;
+  if (!matchEndTime) {
+    timerElement.textContent = '—:—';
+    return;
+  }
+  const remainingSeconds = Math.max(0, Math.ceil((matchEndTime - Date.now()) / 1000));
+  timerElement.textContent = formatTime(remainingSeconds);
+  if (remainingSeconds <= 0) {
+    handleTimerExpired();
+  }
+}
+
+function clearMatchTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function startMatchTimerIfActive(game) {
+  if (matchEnded || timerInterval) return;
+  if (!game || game.status !== 'active') {
+    updateTimerDisplay();
+    return;
+  }
+  const storageKey = `multiplayerStart-${game.id}`;
+  let startTime = sessionStorage.getItem(storageKey);
+  if (!startTime) {
+    startTime = new Date().toISOString();
+    sessionStorage.setItem(storageKey, startTime);
+  }
+  matchEndTime = new Date(startTime).getTime() + MATCH_DURATION_SECONDS * 1000;
+  updateTimerDisplay();
+  timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function buildMatchResultMessage(game) {
+  if (!game || !localPlayerNumber) {
+    return 'Match over.';
+  }
+  const player1Score = Number.isFinite(game.player_1_score) ? game.player_1_score : 0;
+  const player2Score = Number.isFinite(game.player_2_score) ? game.player_2_score : 0;
+  if (player1Score === player2Score) {
+    return `Match over — tie (${player1Score}-${player2Score}).`;
+  }
+  const localScore = localPlayerNumber === 1 ? player1Score : player2Score;
+  const opponentFinalScore = localPlayerNumber === 1 ? player2Score : player1Score;
+  if (localScore > opponentFinalScore) {
+    return `Match over — you win (${localScore}-${opponentFinalScore}).`;
+  }
+  return `Match over — opponent wins (${localScore}-${opponentFinalScore}).`;
+}
+
+function determineWinnerId() {
+  if (!multiplayerGame) return null;
+  const player1Score = localPlayerNumber === 1 ? score : opponentScore;
+  const player2Score = localPlayerNumber === 2 ? score : opponentScore;
+  if (player1Score === player2Score) return null;
+  return player1Score > player2Score ? multiplayerGame.player_1_id : multiplayerGame.player_2_id;
+}
+
+async function finalizeMatchOnServer() {
+  if (!multiplayerGame?.id || multiplayerGame.status === 'finished') return;
+  const winnerId = determineWinnerId();
+  const result = await finishMultiplayerGame(multiplayerGame.id, winnerId);
+  if (!result.success) {
+    console.error('Finish match error:', result.error);
+    setMatchStatus('Time is up, but we could not finalize the match. Please refresh.', true);
+  }
+}
+
+function endMatch(message) {
+  if (matchEnded) return;
+  matchEnded = true;
+  clearMatchTimer();
+  matchEndTime = Date.now();
+  updateTimerDisplay();
+  setGameplayEnabled(false);
+  setMatchStatus(message || 'Match over.');
+}
+
+function updateMultiplayerState(game) {
+  multiplayerGame = game;
+  syncScoresFromGame(game);
+
+  if (game.status === 'waiting') {
+    if (!matchEnded) {
+      setGameplayEnabled(false);
+      clearMatchTimer();
+      matchEndTime = null;
+      updateTimerDisplay();
+      setMatchStatus('Waiting for opponent to join...');
+    }
+    return;
+  }
+
+  if (game.status === 'active') {
+    if (!matchEnded) {
+      setGameplayEnabled(true);
+      setMatchStatus('');
+      startMatchTimerIfActive(game);
+    }
+    return;
+  }
+
+  if (game.status === 'finished') {
+    endMatch(buildMatchResultMessage(game));
+  }
+}
+
+async function initializeMultiplayer() {
+  if (!multiplayerContext?.gameId) return;
+  currentUser = await getCurrentUser();
+  const gameResult = await getMultiplayerGame(multiplayerContext.gameId);
+  if (!gameResult.success || !gameResult.data) {
+    setGameplayEnabled(false);
+    setMatchStatus('Unable to load match data. Please refresh.', true);
+    return;
+  }
+
+  localPlayerNumber = determineLocalPlayerNumber(gameResult.data);
+  if (!localPlayerNumber) {
+    setGameplayEnabled(false);
+    setMatchStatus('Unable to determine your player role. Please rejoin from the dashboard.', true);
+    return;
+  }
+
+  updateMultiplayerState(gameResult.data);
+
+  gameSubscription = subscribeToGameUpdates(multiplayerContext.gameId, payload => {
+    if (payload?.new) {
+      updateMultiplayerState(payload.new);
+    }
+  });
+}
+
+async function syncScoreToServer() {
+  if (!multiplayerContext?.gameId || !localPlayerNumber || matchEnded) return;
+  const result = await updateGameScore(multiplayerContext.gameId, localPlayerNumber, score);
+  if (!result.success) {
+    console.error('Sync score error:', result.error);
+    setMatchStatus('Score sync failed. Check your connection.', true);
+  }
+}
+
 function displayCarNames() {
   const carDatalist = document.getElementById("carSuggestions");
   const yearDatalist = document.getElementById("yearSuggestions");
@@ -369,9 +635,14 @@ window.onload = function() {
   updateScore();
   displayCarNames();
   initializeMap();
+  if (multiplayerContext?.gameId) {
+    initializeMultiplayer();
+  } else {
+    setGameplayEnabled(true);
+  }
 };
 
-document.getElementById("guessForm").addEventListener("submit", function (e) {
+document.getElementById("guessForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
   const guess = document.getElementById("fname").value.trim().toLowerCase();
@@ -379,6 +650,14 @@ document.getElementById("guessForm").addEventListener("submit", function (e) {
   const country = document.getElementById("country").value.trim().toLowerCase();
 
   if (!currentCar) return;
+  if (matchEnded) {
+    setMatchStatus('Match is over.');
+    return;
+  }
+  if (multiplayerContext?.gameId && multiplayerGame?.status !== 'active') {
+    setMatchStatus('Waiting for opponent to join...');
+    return;
+  }
 
   // Validate country is selected
   if (!country) {
@@ -391,6 +670,7 @@ document.getElementById("guessForm").addEventListener("submit", function (e) {
       country === currentCar.country.toLowerCase()) {
     score++;
     updateScore();
+    await syncScoreToServer();
     document.getElementById("answer").textContent = "✓ Correct! Moving to next car...";
     setTimeout(function() {
       loadRandomCar();
@@ -410,6 +690,17 @@ document.getElementById("guessForm").addEventListener("submit", function (e) {
     document.getElementById("answer").textContent = feedback + "Try again.";
   }
 });
+
+function handleTimerExpired() {
+  if (matchEnded) return;
+  endMatch('Time is up!');
+  finalizeMatchOnServer();
+}
+
+window.RevealCurrent = RevealCurrent;
+window.loadRandomCar = loadRandomCar;
+window.HintCurrent = HintCurrent;
+window.copyMultiplayerCode = copyMultiplayerCode;
 </script>
 </body>
 </html>

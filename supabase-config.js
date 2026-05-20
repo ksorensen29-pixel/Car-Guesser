@@ -196,6 +196,26 @@ export async function joinMultiplayerGame(gameCode, player2Id) {
   }
 }
 
+export async function getMultiplayerGame(gameId) {
+  try {
+    if (!gameId) {
+      throw new Error('Game ID is required.');
+    }
+
+    const { data, error } = await supabase
+      .from('multiplayer_games')
+      .select('*')
+      .eq('id', gameId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Get game error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function updateGameScore(gameId, player, newScore) {
   try {
     const updateData = player === 1 ? { player_1_score: newScore } : { player_2_score: newScore };
@@ -234,9 +254,18 @@ export async function finishMultiplayerGame(gameId, winnerId) {
   }
 }
 
-export async function subscribeToGameUpdates(gameId, callback) {
+export function subscribeToGameUpdates(gameId, callback) {
   return supabase
-    .from(`multiplayer_games:id=eq.${gameId}`)
-    .on('*', payload => callback(payload))
+    .channel(`multiplayer-games-${gameId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'multiplayer_games',
+        filter: `id=eq.${gameId}`
+      },
+      payload => callback(payload)
+    )
     .subscribe();
 }
