@@ -216,6 +216,27 @@ export async function getMultiplayerGame(gameId) {
   }
 }
 
+export async function getMultiplayerGameByCode(gameCode) {
+  try {
+    if (!gameCode) {
+      throw new Error('Game code is required.');
+    }
+    const normalizedCode = gameCode.trim().toUpperCase();
+
+    const { data, error } = await supabase
+      .from('multiplayer_games')
+      .select('*')
+      .eq('game_code', normalizedCode)
+      .maybeSingle();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Get game by code error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function updateGameScore(gameId, player, newScore) {
   try {
     const updateData = player === 1 ? { player_1_score: newScore } : { player_2_score: newScore };
