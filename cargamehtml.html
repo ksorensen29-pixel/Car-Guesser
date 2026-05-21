@@ -580,6 +580,10 @@ async function finalizeMatchOnServer() {
   if (!result.success) {
     console.error('Finish match error:', result.error);
     setMatchStatus('Time is up, but we could not finalize the match. Please refresh.', true);
+    return;
+  }
+  if (result.data) {
+    awardWinnerPoint(result.data);
   }
 }
 
@@ -591,7 +595,14 @@ function endMatch(message) {
   matchEndTime = Date.now();
   updateTimerDisplay();
   setGameplayEnabled(false);
-  setMatchStatus(message || 'Match over.');
+  const baseMessage = message || 'Match over.';
+  const finalMessage = multiplayerContext?.gameId
+    ? `${baseMessage} Returning to lobby...`
+    : baseMessage;
+  setMatchStatus(finalMessage);
+  if (multiplayerContext?.gameId) {
+    scheduleLobbyRedirect();
+  }
 }
 
 function updateMultiplayerState(game) {
@@ -619,12 +630,8 @@ function updateMultiplayerState(game) {
   }
 
   if (game.status === 'finished') {
-    const resultMessage = buildMatchResultMessage(game);
-    endMatch(resultMessage);
-    setMatchStatus(`${resultMessage} Returning to lobby...`);
+    endMatch(buildMatchResultMessage(game));
     awardWinnerPoint(game);
-    scheduleLobbyRedirect();
-    stopGamePolling();
   }
 }
 
