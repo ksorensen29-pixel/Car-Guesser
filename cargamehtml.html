@@ -191,12 +191,14 @@ import {
   getCurrentUser,
   getMultiplayerGame,
   getMultiplayerGameByCode,
+  saveGameScore,
   updateGameScore,
   subscribeToGameUpdates,
   finishMultiplayerGame
-} from './supabase-config.js?v=20260521-1';
+} from './supabase-config.js?v=20260521-2';
 
 const MATCH_DURATION_SECONDS = 120;
+const LOBBY_REDIRECT_DELAY_MS = 4000;
 
 const cars = [
   { image: "ScriptMats/photos/1.jpeg", name: "Porsche", year: 2020, country: "Germany" },
@@ -232,6 +234,7 @@ let matchEndTime = null;
 let currentUser = null;
 let gameSubscription = null;
 let gamePollingInterval = null;
+let lobbyRedirectTimeout = null;
 
 function loadMultiplayerContext() {
   const params = new URLSearchParams(window.location.search);
@@ -495,6 +498,28 @@ function stopGamePolling() {
   }
 }
 
+function scheduleLobbyRedirect() {
+  if (lobbyRedirectTimeout) return;
+  lobbyRedirectTimeout = setTimeout(() => {
+    window.location.href = 'dashboard.html';
+  }, LOBBY_REDIRECT_DELAY_MS);
+}
+
+async function awardWinnerPoint(game) {
+  if (!game?.winner_id || !currentUser?.id) return;
+  if (game.winner_id !== currentUser.id) return;
+  const storageKey = `multiplayerWinRecorded-${game.id}`;
+  if (sessionStorage.getItem(storageKey)) return;
+
+  const result = await saveGameScore(currentUser.id, 1, 1, 'multiplayer');
+  if (!result.success) {
+    console.error('Save multiplayer win error:', result.error);
+    return;
+  }
+
+  sessionStorage.setItem(storageKey, 'true');
+}
+
 function startGamePolling() {
   if (gamePollingInterval) return;
   gamePollingInterval = setInterval(async () => {
@@ -594,7 +619,11 @@ function updateMultiplayerState(game) {
   }
 
   if (game.status === 'finished') {
-    endMatch(buildMatchResultMessage(game));
+    const resultMessage = buildMatchResultMessage(game);
+    endMatch(resultMessage);
+    setMatchStatus(`${resultMessage} Returning to lobby...`);
+    awardWinnerPoint(game);
+    scheduleLobbyRedirect();
     stopGamePolling();
   }
 }
