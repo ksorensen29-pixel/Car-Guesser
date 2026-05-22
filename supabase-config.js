@@ -15,8 +15,8 @@ export const supabase = createClient(supabaseConfig.url, supabaseConfig.anon_key
 // Example for your local dev: 'http://localhost:56785/dashboard/'
 // Set this to your running site's base path so magic links point to the correct host.
 // Example for your local dev: 'http://localhost:56785/dashboard/'
-// Updated to user-provided local server:
-export const MAGIC_LINK_REDIRECT_BASE = 'http://localhost:57015/dashboard/';
+// Leave empty to compute from current window location.
+export const MAGIC_LINK_REDIRECT_BASE = '';
 
 function getAppRootPath() {
   const { pathname } = window.location;
