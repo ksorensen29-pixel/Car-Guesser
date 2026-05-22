@@ -197,6 +197,7 @@
         .field-input{padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'Barlow',sans-serif;color:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;}
         .field-input::placeholder{color:rgba(255,255,255,0.18);}
         .field-input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,0,29,0.12);}
+        .year-hint{min-height:16px;font-size:12px;letter-spacing:1px;font-weight:600;color:var(--muted);transition:color 0.2s ease;}
 
         /* ── MAP ── */
         .map-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;}
@@ -348,6 +349,7 @@
                 <div class="field-group">
                     <label class="field-label">Year</label>
                     <input class="field-input" type="number" id="yearClassic" min="1800" max="2025" placeholder="e.g. 1895" />
+                    <div class="year-hint" id="yearHintClassic"></div>
                 </div>
             </div>
             <div class="map-label">Country of Origin — click a highlighted country</div>
@@ -768,6 +770,7 @@ function clearForm(mode) {
         document.getElementById('countryClassic').value = '';
         document.getElementById('countryFallbackClassic').value = '';
         document.getElementById('selectedCountryClassic').textContent = 'No country selected';
+        clearYearHint();
     }
     if (mode === 'reveal') document.getElementById('fnameReveal').value = '';
 }
@@ -1031,6 +1034,30 @@ function confetti() {
     }
 }
 
+function clearYearHint() {
+    const el = document.getElementById('yearHintClassic');
+    if (!el) return;
+    el.textContent = '';
+    el.style.color = '';
+}
+
+function setYearHint(guessYear, actualYear) {
+    const el = document.getElementById('yearHintClassic');
+    if (!el || !Number.isFinite(guessYear) || !Number.isFinite(actualYear)) return;
+    if (guessYear === actualYear) {
+        clearYearHint();
+        return;
+    }
+    const diff = Math.abs(actualYear - guessYear);
+    const maxDiff = 100;
+    const ratio = Math.max(0, Math.min(1, 1 - (diff / maxDiff)));
+    const hue = Math.round(120 * ratio);
+    const arrow = guessYear < actualYear ? '↑' : '↓';
+    const label = guessYear < actualYear ? 'Too low' : 'Too high';
+    el.textContent = `${arrow} ${label}`;
+    el.style.color = `hsl(${hue}, 80%, 50%)`;
+}
+
 // ── GAME ACTIONS ──
 function RevealCurrent(mode) {
     if (!currentCar) return;
@@ -1061,12 +1088,13 @@ function submitGuess(mode) {
         const year    = parseInt(yearVal);
         const country = document.getElementById('countryClassic').value.trim().toLowerCase();
         if (!guess)  { showFeedback(mode,'⚠ Enter a car name.','wrong'); animateCard(mode,'wrong'); return; }
-        if (!yearVal||isNaN(year)) { showFeedback(mode,'⚠ Enter a valid year.','wrong'); animateCard(mode,'wrong'); return; }
+        if (!yearVal||isNaN(year)) { clearYearHint(); showFeedback(mode,'⚠ Enter a valid year.','wrong'); animateCard(mode,'wrong'); return; }
         if (!country){ showFeedback(mode,'⚠ Select a country on the map.','wrong'); animateCard(mode,'wrong'); return; }
         const nameOk    = guess === currentCar.name.toLowerCase();
         const yearOk    = year  === currentCar.year;
         const countryOk = country === currentCar.country.toLowerCase();
         if (nameOk && yearOk && countryOk) {
+            clearYearHint();
             const revealed = revealedByMode[mode];
             if (!revealed) {
                 addScore(1);
@@ -1085,6 +1113,8 @@ function submitGuess(mode) {
             if (!nameOk)    parts.push('name');
             if (!yearOk)    parts.push('year');
             if (!countryOk) parts.push('country');
+            if (!yearOk) setYearHint(year, currentCar.year);
+            else clearYearHint();
             showFeedback(mode, '✗  Wrong ' + parts.join(', ') + '. Try again!', 'wrong');
         }
     }
