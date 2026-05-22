@@ -347,7 +347,7 @@
                 </div>
                 <div class="field-group">
                     <label class="field-label">Year</label>
-                    <input class="field-input" type="number" id="yearClassic" min="1886" max="2025" placeholder="e.g. 1995" />
+                    <input class="field-input" type="number" id="yearClassic" min="1800" max="2025" placeholder="e.g. 1895" />
                 </div>
             </div>
             <div class="map-label">Country of Origin — click a highlighted country</div>
@@ -539,6 +539,7 @@ let revealInterval = null, revealStage = 0, revealTimer = 0;
 let maps = {};
 let round = { classic:1, reveal:1, price:1 };
 let modeSessionScores = { classic:0, reveal:0, price:0 };
+let revealedByMode = { classic:false, reveal:false, price:false };
 const TARGET_MULTIPLAYER_SCORE = 15;
 const REVEAL_STAGE_SECONDS = 8;
 
@@ -676,6 +677,7 @@ function getModeFromStatus(status) {
 
 // ── CAR LOADING ──
 function loadCar(mode) {
+    revealedByMode[mode] = false;
     if (usedIndices.length >= cars.length) usedIndices = [];
     let idx;
     do { idx = Math.floor(Math.random() * cars.length); } while (usedIndices.includes(idx));
@@ -1032,6 +1034,7 @@ function confetti() {
 // ── GAME ACTIONS ──
 function RevealCurrent(mode) {
     if (!currentCar) return;
+    revealedByMode[mode] = true;
     if (mode === 'classic') {
         document.getElementById('fnameClassic').value = currentCar.name;
         document.getElementById('yearClassic').value = currentCar.year;
@@ -1064,10 +1067,17 @@ function submitGuess(mode) {
         const yearOk    = year  === currentCar.year;
         const countryOk = country === currentCar.country.toLowerCase();
         if (nameOk && yearOk && countryOk) {
-            addScore(1); streak++; round[mode]++;
+            const revealed = revealedByMode[mode];
+            if (!revealed) {
+                addScore(1);
+                streak++;
+                if (streak >= 3) confetti();
+            } else {
+                streak = 0;
+            }
+            round[mode]++;
             flashCorrect(mode); updateStreak(); animateCard(mode,'correct');
-            if (streak >= 3) confetti();
-            showFeedback(mode, '✓  Correct! Loading next car…', 'correct');
+            showFeedback(mode, revealed ? '✓  Correct, but no points after reveal. Loading next car…' : '✓  Correct! Loading next car…', 'correct');
             setTimeout(() => { loadCar(mode); window.scrollTo({top:0,behavior:'smooth'}); }, 1400);
         } else {
             streak = 0; updateStreak(); animateCard(mode,'wrong');
