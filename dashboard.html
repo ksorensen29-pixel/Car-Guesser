@@ -1232,9 +1232,37 @@
     ];
     const rememberedEmailKey = 'carGuesserEmail';
 
+    async function processMagicLinkFromUrl() {
+        if (!window.location.hash || !window.location.hash.includes('access_token')) {
+            return false;
+        }
+        try {
+            const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+            if (error) {
+                showToast('Sign-in link error: ' + error.message, 'error', 6000);
+            }
+            try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) { /* ignore */ }
+            if (data?.session?.user) {
+                currentUser = data.session.user;
+                const profileResult = await syncUserProfile();
+                if (!profileResult.success) {
+                    console.warn('Profile sync error:', profileResult.error);
+                }
+                window.location.href = 'cargamehtml.html';
+                return true;
+            }
+            return false;
+        } catch (e) {
+            showToast('Sign-in link error: ' + (e?.message || e), 'error', 6000);
+            return true;
+        }
+    }
+
     // Initialize on page load
     async function init() {
         loadRememberedEmail();
+        const handled = await processMagicLinkFromUrl();
+        if (handled) return;
         await checkAuthStatus();
         if (currentUser) {
             window.location.href = 'cargamehtml.html';

@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CarGuesser</title>
-    <meta http-equiv="refresh" content="0; url=dashboard.html">
     <script>
-        window.location.replace('dashboard.html');
+        const target = 'dashboard.html' + window.location.search + window.location.hash;
+        window.location.replace(target);
     </script>
 </head>
 <body>
