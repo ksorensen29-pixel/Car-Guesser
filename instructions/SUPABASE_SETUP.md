@@ -239,7 +239,7 @@ export const supabaseConfig = {
 
 ---
 
-**Ready?** Provide your Supabase credentials and I'll build the multiplayer features! 🚀
+**Ready?** Provide your Supabase credentials and I'll build the multiplayer features.
 
 Format:
 ```

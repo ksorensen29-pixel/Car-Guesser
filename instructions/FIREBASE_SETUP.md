@@ -107,4 +107,4 @@ For testing, we use "Test Mode" which allows all reads/writes. Later, we'll secu
 
 ---
 
-**Ready?** Paste your Firebase config in the chat and we'll proceed! 🚀
+**Ready?** Paste your Firebase config in the chat and we'll proceed.

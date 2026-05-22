@@ -37,11 +37,11 @@ git push
 ```
 
 ## Important Notes
-✓ **Always use JPEG format** (.jpeg or .jpg extension)  
-✓ **Use numerical filenames** (8.jpeg, 9.jpeg, 10.jpeg, etc.)  
-✓ **Include all 4 fields**: image path, name, year, and country  
-✓ **Don't break the JavaScript syntax** - ensure commas are correct  
-✓ **Add multiple cars at once** when possible for cleaner commit history
+- **Always use JPEG format** (.jpeg or .jpg extension)  
+- **Use numerical filenames** (8.jpeg, 9.jpeg, 10.jpeg, etc.)  
+- **Include all 4 fields**: image path, name, year, and country  
+- **Don't break the JavaScript syntax** - ensure commas are correct  
+- **Add multiple cars at once** when possible for cleaner commit history
 
 ## File Structure
 ```
@@ -61,4 +61,4 @@ Car-Guesser/
 └── README.md
 ```
 
-Good luck adding more cars! 🚗
+Good luck adding more cars!

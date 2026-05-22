@@ -1073,10 +1073,10 @@
                 autocomplete="email"
             />
             <button class="email-signin-btn" onclick="handleEmailSignIn()">
-                🔐 Sign in with Email
+                Sign in with Email
             </button>
             <button id="guestPlayBtn" class="guest-btn" onclick="handleGuestPlay()" style="margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 12px;border-radius:8px;">
-                👤 Play as Guest
+                Play as Guest
             </button>
             <div class="login-footnote">After sign-in, the email link opens the game directly and this device remembers your address.</div>
             <div style="margin-top:12px;border-top:1px dashed rgba(255,255,255,0.04);padding-top:12px;font-size:13px;color:rgba(255,255,255,0.7);">
@@ -1099,7 +1099,7 @@
 
 <div id="dashboardContainer" class="dashboard-container" style="display: none;">
     <div class="dashboard-header">
-        <h1>🏎️ CARGUESSER</h1>
+        <h1>CARGUESSER</h1>
         <div class="user-profile">
             <div class="user-info">
                 <h2 id="userName">User</h2>
@@ -1118,7 +1118,7 @@
 
         <div id="playTab" class="tab-panel active">
             <div class="section">
-                <h2>🎮 Game Modes</h2>
+                <h2>Game Modes</h2>
                 <div class="game-modes">
                     <div class="game-card" onclick="startSinglePlayer()">
                         <h3>Single Player</h3>
@@ -1141,14 +1141,14 @@
 
         <div id="leaderboardTab" class="tab-panel">
             <div class="section">
-                <h2>🏆 Mode Leaderboard</h2>
+                <h2>Mode Leaderboard</h2>
                 <div id="leaderboardContent" class="mode-leaderboard-grid">
                     <div class="loading">Loading mode leaderboard...</div>
                 </div>
                 <div id="localGuestScores" style="margin-top:18px;border-top:1px dashed rgba(255,255,255,0.04);padding-top:14px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                         <div>
-                            <h3 style="margin:0 0 6px 0;">🧾 Local Guest Scores</h3>
+                            <h3 style="margin:0 0 6px 0;">Local Guest Scores</h3>
                             <div style="font-size:12px;color:var(--muted);">Scores saved on this device when you played as guest.</div>
                         </div>
                         <div style="display:flex;gap:8px;align-items:center;">
@@ -1171,7 +1171,7 @@
         <h2>Create 1v1 Duel</h2>
         <p id="gameCode" style="font-size: 24px; color: #ffc840; margin: 20px 0;"></p>
         <p style="margin-bottom: 20px;">Share this duel code with your friend!</p>
-        <button class="play-btn" onclick="copyGameCode()">📋 Copy Code</button>
+        <button class="play-btn" onclick="copyGameCode()">Copy Code</button>
         <button class="btn-secondary" onclick="closeModal('createGameModal')" style="margin-top: 10px;">Close</button>
     </div>
 </div>
@@ -1215,7 +1215,7 @@
             }
             const t = document.createElement('div');
             t.className = 'toast ' + (type || 'info');
-            t.innerHTML = `<div class="toast-icon">${type==='error'?'⚠️':type==='success'?'✅':'🔔'}</div><div class="toast-body">${String(message)}</div>`;
+            t.innerHTML = `<div class="toast-icon">${type==='error'?'Error':type==='success'?'Success':'Info'}</div><div class="toast-body">${String(message)}</div>`;
             wrap.appendChild(t);
             requestAnimationFrame(() => t.classList.add('show'));
             setTimeout(() => {

@@ -313,7 +313,6 @@ export function subscribeToGameUpdates(gameId, callback) {
     )
     .subscribe();
 }
-3
 // ---- Local guest helpers (device-only guest identity)
 const GUEST_KEY = 'carGuesserGuest';
 

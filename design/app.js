@@ -1,7 +1,7 @@
 const silhouetteImg = document.getElementById('silhouetteImg');
-const emailInput = document.getElementById('emailInput');
+const emailInput = document.getElementById('email');
 const guestBtn = document.getElementById('guestBtn');
-const signInBtn = document.getElementById('signInBtn');
+const playBtn = document.getElementById('playBtn');
 
 // Small, tasteful entry animation sequence
 window.addEventListener('load', () => {
@@ -76,7 +76,7 @@ if (silhouetteImg) {
 // If user typed in the main email, mirror into popup when it opens
 document.addEventListener('click', (e) => {
   const target = e.target;
-  if (target && (target.id === 'guestBtn' || target.id === 'signInBtn')) {
+  if (target && (target.id === 'guestBtn' || target.id === 'playBtn')) {
     const popupEmail = document.getElementById('popupEmail');
     if (popupEmail && emailInput && emailInput.value.trim()) popupEmail.value = emailInput.value.trim();
   }

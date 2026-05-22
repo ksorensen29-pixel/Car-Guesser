@@ -247,7 +247,7 @@
 
 <!-- Loading -->
 <div class="loading-screen" id="loadingScreen">
-    <div class="loading-car">🏎️</div>
+    <div class="loading-car">CAR</div>
     <div class="loading-logo">CAR<span>GUESSER</span></div>
     <div class="loading-bar-bg"><div class="loading-bar" id="loadBar"></div></div>
     <div class="loading-sub" id="loadSub">Loading cars…</div>
@@ -263,7 +263,7 @@
     <a href="dashboard.html" class="nav-logo">CAR<span>GUESSER</span></a>
     <div class="nav-center">
         <div class="score-wrap">SCORE &nbsp;<span id="scoreVal">0</span></div>
-        <div class="streak-pill" id="streakPill">🔥 <span id="streakNum">0</span></div>
+        <div class="streak-pill" id="streakPill">Streak <span id="streakNum">0</span></div>
         <div class="mode-badge" id="modeBadge"></div>
     </div>
     <a href="dashboard.html" class="home-btn">← Home</a>
@@ -287,7 +287,7 @@
         <div class="mode-cards">
 
             <div class="mode-card classic-card" onclick="startMode('classic')">
-                <div class="mode-icon">🏁</div>
+                <div class="mode-icon">C</div>
                 <div class="mode-info">
                     <div class="mode-name">Classic</div>
                     <div class="mode-desc">Guess the car name, production year, and country of origin. The full experience.</div>
@@ -297,21 +297,21 @@
             </div>
 
             <div class="mode-card reveal-card" onclick="startMode('reveal')">
-                <div class="mode-icon">🔍</div>
+                <div class="mode-icon">R</div>
                 <div class="mode-info">
                     <div class="mode-name">Reveal Rush</div>
                     <div class="mode-desc">The image starts blurred. Every 5 seconds it reveals more. Guess fast for more points!</div>
-                    <div class="mode-tag">⚡ Speedrun</div>
+                    <div class="mode-tag">Speedrun</div>
                 </div>
                 <div class="mode-arrow">→</div>
             </div>
 
             <div class="mode-card price-card" onclick="startMode('price')">
-                <div class="mode-icon">💰</div>
+                <div class="mode-icon">$</div>
                 <div class="mode-info">
                     <div class="mode-name">Price Guesser</div>
                     <div class="mode-desc">See the car, use the slider to guess its price. Closest guess wins the most points!</div>
-                    <div class="mode-tag">💸 High Stakes</div>
+                    <div class="mode-tag">High Stakes</div>
                 </div>
                 <div class="mode-arrow">→</div>
             </div>
@@ -322,20 +322,20 @@
     <!-- CLASSIC MODE -->
     <div id="classicScreen" class="game-screen">
         <button class="back-btn" onclick="goBack()">← Change Mode</button>
-        <div class="round-bar"><span>Round <span class="round-num" id="classicRound">1</span></span><span style="font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,136,255,0.7)">🏁 CLASSIC</span></div>
+        <div class="round-bar"><span>Round <span class="round-num" id="classicRound">1</span></span><span style="font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,136,255,0.7)">CLASSIC</span></div>
         <div class="car-card" id="carCardClassic">
             <div class="car-top-bar"></div>
             <div class="car-img-wrap">
                 <div class="skeleton" id="skeletonClassic"></div>
-                <div class="no-img" id="noImgClassic"><div class="icon">🏎️</div><div>Run: npx serve .</div></div>
+                <div class="no-img" id="noImgClassic"><div class="icon">IMG</div><div>Run: npx serve .</div></div>
                 <img id="img" src="" alt="" />
                 <div class="correct-flash" id="correctFlashClassic"></div>
             </div>
         </div>
         <div class="action-row">
-            <button class="btn btn-hint" onclick="HintCurrent('classic')">💡 Hint</button>
-            <button class="btn" onclick="RevealCurrent('classic')">👁 Reveal</button>
-            <button class="btn" onclick="skipCar('classic')">⏭ Skip</button>
+            <button class="btn btn-hint" onclick="HintCurrent('classic')">Hint</button>
+            <button class="btn" onclick="RevealCurrent('classic')">Reveal</button>
+            <button class="btn" onclick="skipCar('classic')">Skip</button>
         </div>
         <div class="feedback" id="feedbackClassic"></div>
         <div class="guess-card">
@@ -366,12 +366,12 @@
     <!-- REVEAL RUSH MODE -->
     <div id="revealScreen" class="game-screen">
         <button class="back-btn" onclick="goBack()">← Change Mode</button>
-        <div class="round-bar"><span>Round <span class="round-num" id="revealRound">1</span></span><span style="font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(232,0,29,0.7)">🔍 REVEAL RUSH</span></div>
+        <div class="round-bar"><span>Round <span class="round-num" id="revealRound">1</span></span><span style="font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(232,0,29,0.7)">REVEAL RUSH</span></div>
         <div class="car-card" id="carCardReveal">
             <div class="car-top-bar"></div>
             <div class="car-img-wrap">
                 <div class="skeleton" id="skeletonReveal"></div>
-                <div class="no-img" id="noImgReveal"><div class="icon">🔍</div><div>Run: npx serve .</div></div>
+                <div class="no-img" id="noImgReveal"><div class="icon">IMG</div><div>Run: npx serve .</div></div>
                 <img id="imgReveal" src="" alt="" />
                 <div class="reveal-overlay" id="revealOverlay"></div>
                 <div class="reveal-timer" id="revealTimerWrap">
@@ -397,12 +397,12 @@
     <!-- PRICE GUESSER MODE -->
     <div id="priceScreen" class="game-screen">
         <button class="back-btn" onclick="goBack()">← Change Mode</button>
-        <div class="round-bar"><span>Round <span class="round-num" id="priceRound">1</span></span><span style="font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,212,106,0.7)">💰 PRICE GUESSER</span></div>
+        <div class="round-bar"><span>Round <span class="round-num" id="priceRound">1</span></span><span style="font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,212,106,0.7)">PRICE GUESSER</span></div>
         <div class="car-card" id="carCardPrice">
             <div class="car-top-bar" style="background:linear-gradient(90deg,transparent,var(--green) 30%,#00ff88 60%,transparent)"></div>
             <div class="car-img-wrap">
                 <div class="skeleton" id="skeletonPrice"></div>
-                <div class="no-img" id="noImgPrice"><div class="icon">💰</div><div>Run: npx serve .</div></div>
+                <div class="no-img" id="noImgPrice"><div class="icon">IMG</div><div>Run: npx serve .</div></div>
                 <img id="imgPrice" src="" alt="" />
                 <div class="correct-flash" id="correctFlashPrice"></div>
             </div>
@@ -647,7 +647,7 @@ async function startMode(mode, source = 'ui') {
     document.getElementById(mode + 'Screen').classList.add('active');
     const badge = document.getElementById('modeBadge');
     badge.className = 'mode-badge show ' + mode;
-    const labels = { classic:'🏁 Classic', reveal:'🔍 Reveal Rush', price:'💰 Price Guesser' };
+    const labels = { classic:'Classic', reveal:'Reveal Rush', price:'Price Guesser' };
     badge.textContent = labels[mode];
     if (mode === 'classic') {
         if (!maps.classic) initMap('classic');
@@ -1066,9 +1066,9 @@ function RevealCurrent(mode) {
         document.getElementById('fnameClassic').value = currentCar.name;
         document.getElementById('yearClassic').value = currentCar.year;
         document.getElementById('countryClassic').value = currentCar.country;
-        document.getElementById('selectedCountryClassic').textContent = '✓ ' + currentCar.country;
+        document.getElementById('selectedCountryClassic').textContent = 'Selected: ' + currentCar.country;
     }
-    showFeedback(mode, '👁  ' + currentCar.name + ' · ' + currentCar.year + ' · ' + currentCar.country, 'reveal');
+    showFeedback(mode, 'Reveal: ' + currentCar.name + ' · ' + currentCar.year + ' · ' + currentCar.country, 'reveal');
 }
 function HintCurrent(mode) {
     if (!currentCar) return;
@@ -1076,7 +1076,7 @@ function HintCurrent(mode) {
     const words = currentCar.name.split(' ').length;
     const first = currentCar.name.charAt(0);
     const len = currentCar.name.length;
-    showFeedback(mode, `💡  ${len} letters · starts with "${first}" · ${words} word${words>1?'s':''} · From the ${decade}s`, 'hint');
+    showFeedback(mode, `Hint: ${len} letters · starts with "${first}" · ${words} word${words>1?'s':''} · From the ${decade}s`, 'hint');
 }
 
 function submitGuess(mode) {
@@ -1087,9 +1087,9 @@ function submitGuess(mode) {
         const yearVal = document.getElementById('yearClassic').value.trim();
         const year    = parseInt(yearVal);
         const country = document.getElementById('countryClassic').value.trim().toLowerCase();
-        if (!guess)  { showFeedback(mode,'⚠ Enter a car name.','wrong'); animateCard(mode,'wrong'); return; }
-        if (!yearVal||isNaN(year)) { clearYearHint(); showFeedback(mode,'⚠ Enter a valid year.','wrong'); animateCard(mode,'wrong'); return; }
-        if (!country){ showFeedback(mode,'⚠ Select a country on the map.','wrong'); animateCard(mode,'wrong'); return; }
+        if (!guess)  { showFeedback(mode,'Enter a car name.','wrong'); animateCard(mode,'wrong'); return; }
+        if (!yearVal||isNaN(year)) { clearYearHint(); showFeedback(mode,'Enter a valid year.','wrong'); animateCard(mode,'wrong'); return; }
+        if (!country){ showFeedback(mode,'Select a country on the map.','wrong'); animateCard(mode,'wrong'); return; }
         const nameOk    = guess === currentCar.name.toLowerCase();
         const yearOk    = year  === currentCar.year;
         const countryOk = country === currentCar.country.toLowerCase();
@@ -1105,7 +1105,7 @@ function submitGuess(mode) {
             }
             round[mode]++;
             flashCorrect(mode); updateStreak(); animateCard(mode,'correct');
-            showFeedback(mode, revealed ? '✓  Correct, but no points after reveal. Loading next car…' : '✓  Correct! Loading next car…', 'correct');
+            showFeedback(mode, revealed ? 'Correct, but no points after reveal. Loading next car…' : 'Correct! Loading next car…', 'correct');
             setTimeout(() => { loadCar(mode); window.scrollTo({top:0,behavior:'smooth'}); }, 1400);
         } else {
             streak = 0; updateStreak(); animateCard(mode,'wrong');
@@ -1115,13 +1115,13 @@ function submitGuess(mode) {
             if (!countryOk) parts.push('country');
             if (!yearOk) setYearHint(year, currentCar.year);
             else clearYearHint();
-            showFeedback(mode, '✗  Wrong ' + parts.join(', ') + '. Try again!', 'wrong');
+            showFeedback(mode, 'Wrong ' + parts.join(', ') + '. Try again!', 'wrong');
         }
     }
 
     else if (mode === 'reveal') {
         const guess = document.getElementById('fnameReveal').value.trim().toLowerCase();
-        if (!guess) { showFeedback(mode,'⚠ Enter a car name.','wrong'); return; }
+        if (!guess) { showFeedback(mode,'Enter a car name.','wrong'); return; }
         if (guess === currentCar.name.toLowerCase()) {
             if (revealInterval) { clearInterval(revealInterval); revealInterval = null; }
             // Points based on stage (earlier = more points)
@@ -1133,12 +1133,12 @@ function submitGuess(mode) {
             const ov = document.getElementById('revealOverlay');
             ov.style.backdropFilter = 'blur(0px)';
             ov.style.webkitBackdropFilter = 'blur(0px)';
-            showFeedback(mode, `✓  Correct! +${pts} point${pts>1?'s':''} (Stage ${revealStage+1}) — Next car…`, 'correct');
+            showFeedback(mode, `Correct! +${pts} point${pts>1?'s':''} (Stage ${revealStage+1}) — Next car…`, 'correct');
             round[mode]++;
             setTimeout(() => { loadCar(mode); window.scrollTo({top:0,behavior:'smooth'}); }, 1600);
         } else {
             streak = 0; updateStreak(); animateCard(mode,'wrong');
-            showFeedback(mode, '✗  Wrong! Keep watching…', 'wrong');
+            showFeedback(mode, 'Wrong! Keep watching…', 'wrong');
         }
     }
 
@@ -1148,11 +1148,11 @@ function submitGuess(mode) {
         const diff = Math.abs(guessPrice - actual);
         const pct = diff / actual;
         let pts = 0, cls = '', msg = '';
-        if (pct <= 0.05)      { pts=5; cls='close';  msg='🎯 Incredible! Within 5%!'; }
-        else if (pct <= 0.15) { pts=3; cls='close';  msg='🔥 Very close! Within 15%!'; }
-        else if (pct <= 0.30) { pts=2; cls='medium'; msg='👍 Pretty good! Within 30%!'; }
-        else if (pct <= 0.50) { pts=1; cls='medium'; msg='📈 Not bad. Within 50%.'; }
-        else                   { pts=0; cls='far';    msg='💸 Way off!'; }
+        if (pct <= 0.05)      { pts=5; cls='close';  msg='Incredible! Within 5%!'; }
+        else if (pct <= 0.15) { pts=3; cls='close';  msg='Very close! Within 15%!'; }
+        else if (pct <= 0.30) { pts=2; cls='medium'; msg='Pretty good! Within 30%!'; }
+        else if (pct <= 0.50) { pts=1; cls='medium'; msg='Not bad. Within 50%.'; }
+        else                   { pts=0; cls='far';    msg='Way off!'; }
 
         if (pts > 0) { addScore(pts); streak++; if (streak >= 3) confetti(); }
         else streak = 0;
@@ -1601,7 +1601,7 @@ function initMap(mode) {
                             document.getElementById('country' + cap(mode)).value = name;
                             const fallback = document.getElementById('countryFallbackClassic');
                             if (fallback) fallback.value = name;
-                            document.getElementById('selectedCountry' + cap(mode)).textContent = '✓ ' + name;
+                            document.getElementById('selectedCountry' + cap(mode)).textContent = 'Selected: ' + name;
                         });
                         layer.on('mouseover', () => layer.setStyle({fillOpacity:0.55,weight:2.5}));
                         layer.on('mouseout',  () => layer.setStyle({fillOpacity:0.3,weight:2}));
@@ -1637,7 +1637,7 @@ function setupCountryFallback() {
     sel.addEventListener('change', () => {
         const country = sel.value;
         document.getElementById('countryClassic').value = country;
-        document.getElementById('selectedCountryClassic').textContent = country ? ('✓ ' + country) : 'No country selected';
+        document.getElementById('selectedCountryClassic').textContent = country ? ('Selected: ' + country) : 'No country selected';
     });
 }
 </script>
