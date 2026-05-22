@@ -559,6 +559,7 @@ const multiplayer = {
 };
 let authBootstrapPromise = null;
 let lobbyRedirectTimeout = null;
+let partyPollInterval = null;
 
 function scheduleLobbyRedirect() {
     if (lobbyRedirectTimeout) return;
@@ -1204,6 +1205,31 @@ async function patchGame(gameId, payload) {
     return data;
 }
 
+function startPartyPolling() {
+    if (partyPollInterval) return;
+    partyPollInterval = setInterval(async () => {
+        if (!multiplayer.enabled || !multiplayer.gameId) return;
+        try {
+            const game = await fetchGame(multiplayer.gameId);
+            if (!game) return;
+            multiplayer.opponentJoined = !!game.player_2_id;
+            updatePartyScoreboard(game);
+            if (game.status === 'active' && multiplayer.opponentJoined) {
+                setPartyStatus('Opponent joined. First to ' + TARGET_MULTIPLAYER_SCORE + ' points wins. Click Pick Mode to start.');
+            }
+            if (game.status === 'finished') handleFinishedParty(game);
+        } catch (e) {
+            console.warn('Party poll error:', e?.message || e);
+        }
+    }, 4000);
+}
+
+function stopPartyPolling() {
+    if (!partyPollInterval) return;
+    clearInterval(partyPollInterval);
+    partyPollInterval = null;
+}
+
 async function createParty() {
     try {
         await bootstrapAuthState();
@@ -1239,6 +1265,7 @@ async function createParty() {
         updatePartyScoreboard(data);
         setPartyStatus('Duel created. Share the code and wait for your opponent.');
         subscribeToParty();
+        startPartyPolling();
         switchGameTab('party');
 
         const u = new URL(window.location.href);
@@ -1293,6 +1320,7 @@ async function joinPartyByCode() {
         updatePartyScoreboard(data);
         setPartyStatus('Joined duel. Click Pick Mode to start racing.');
         subscribeToParty();
+        startPartyPolling();
         switchGameTab('party');
 
         const u = new URL(window.location.href);
@@ -1346,6 +1374,7 @@ function handleFinishedParty(game) {
     const p1 = game.player_1_score || 0;
     const p2 = game.player_2_score || 0;
     const iWon = game.winner_id && game.winner_id === multiplayer.myUserId;
+    stopPartyPolling();
     updatePartyScoreboard(game);
     setPartyStatus(iWon ? 'You won the duel! First to ' + TARGET_MULTIPLAYER_SCORE + '. Returning to lobby...' : 'Opponent won this race. Returning to lobby...');
     if (game.status === 'finished') {
@@ -1365,6 +1394,7 @@ async function leaveParty() {
         clearTimeout(lobbyRedirectTimeout);
         lobbyRedirectTimeout = null;
     }
+    stopPartyPolling();
     if (multiplayer.channel) {
         supabaseClient.removeChannel(multiplayer.channel);
         multiplayer.channel = null;
@@ -1456,6 +1486,7 @@ async function initMultiplayerFromUrlOrSession() {
             setPartyStatus('Duel connected. First to ' + TARGET_MULTIPLAYER_SCORE + ' points wins. Click Pick Mode to start.');
         }
         subscribeToParty();
+        startPartyPolling();
     } catch (e) {
         setPartyStatus('Could not restore duel: ' + (e.message || 'Unknown error'), true);
         setPartyUIActive(false);
