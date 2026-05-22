@@ -620,10 +620,19 @@ window.addEventListener('load', () => {
 });
 
 // ── MODE ──
-function startMode(mode) {
-    if (multiplayer.enabled && !multiplayer.opponentJoined) {
-        setPartyStatus('Waiting for opponent to join duel before starting.', true);
-        return;
+async function startMode(mode, source = 'ui') {
+    if (multiplayer.enabled) {
+        if (source === 'ui') {
+            if (multiplayer.role !== 'host') {
+                setPartyStatus('Only the host can choose the mode. Waiting for host...', true);
+                return;
+            }
+            if (!multiplayer.opponentJoined) {
+                setPartyStatus('Waiting for opponent to join duel before starting.', true);
+                return;
+            }
+            await setPartyMode(mode);
+        }
     }
     if (currentMode && currentMode !== mode) {
         saveCurrentModeScore(currentMode);
@@ -653,6 +662,16 @@ function goBack() {
     document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
     document.getElementById('modeSelect').style.display = 'block';
     document.getElementById('modeBadge').className = 'mode-badge';
+}
+
+function isActiveStatus(status) {
+    return status === 'active' || (status && status.startsWith('active:'));
+}
+
+function getModeFromStatus(status) {
+    if (!status) return '';
+    if (status.startsWith('active:')) return status.split(':')[1] || '';
+    return '';
 }
 
 // ── CAR LOADING ──
@@ -831,7 +850,7 @@ async function loadLiveRooms() {
         const { data: games, error } = await supabaseClient
             .from('multiplayer_games')
             .select('game_code, status, player_1_id, player_2_id')
-            .in('status', ['waiting', 'active'])
+            .or('status.eq.waiting,status.like.active%')
             .order('created_at', { ascending: false });
         if (error) throw error;
 
@@ -853,6 +872,7 @@ async function loadLiveRooms() {
 
         const userMap = new Map((users || []).map(user => [user.id, user]));
         const cards = activeGames.flatMap(game => {
+            const statusLabel = (game.status && game.status.startsWith('active')) ? 'active' : (game.status || '');
             const host = userMap.get(game.player_1_id);
             const guest = userMap.get(game.player_2_id);
             return [
@@ -860,7 +880,7 @@ async function loadLiveRooms() {
                     <div class="live-room-card">
                         <div class="live-room-main">
                             <div class="live-room-title">${host.name || 'Anonymous'} <span style="color:rgba(255,255,255,0.35);font-weight:400">(host)</span></div>
-                            <div class="live-room-meta">Room ${game.game_code} · ${game.status}</div>
+                            <div class="live-room-meta">Room ${game.game_code} · ${statusLabel}</div>
                         </div>
                         <div class="live-room-pill">Live</div>
                     </div>
@@ -869,7 +889,7 @@ async function loadLiveRooms() {
                     <div class="live-room-card">
                         <div class="live-room-main">
                             <div class="live-room-title">${guest.name || 'Anonymous'} <span style="color:rgba(255,255,255,0.35);font-weight:400">(guest)</span></div>
-                            <div class="live-room-meta">Room ${game.game_code} · ${game.status}</div>
+                            <div class="live-room-meta">Room ${game.game_code} · ${statusLabel}</div>
                         </div>
                         <div class="live-room-pill">Live</div>
                     </div>
@@ -1205,6 +1225,33 @@ async function patchGame(gameId, payload) {
     return data;
 }
 
+async function setPartyMode(mode) {
+    if (!multiplayer.enabled || !multiplayer.gameId) return;
+    const desiredStatus = 'active:' + mode;
+    try {
+        const game = await patchGame(multiplayer.gameId, { status: desiredStatus });
+        if (game) {
+            handlePartyGameUpdate(game);
+        }
+    } catch (e) {
+        setPartyStatus('Could not set mode: ' + (e.message || 'Unknown error'), true);
+    }
+}
+
+function handlePartyGameUpdate(game) {
+    multiplayer.opponentJoined = !!game.player_2_id;
+    updatePartyScoreboard(game);
+    const statusMode = getModeFromStatus(game.status);
+    if (statusMode) {
+        if (currentMode !== statusMode) {
+            startMode(statusMode, 'sync');
+        }
+    } else if (isActiveStatus(game.status) && multiplayer.opponentJoined) {
+        setPartyStatus('Opponent joined. First to ' + TARGET_MULTIPLAYER_SCORE + ' points wins. Click Pick Mode to start.');
+    }
+    if (game.status === 'finished') handleFinishedParty(game);
+}
+
 function startPartyPolling() {
     if (partyPollInterval) return;
     partyPollInterval = setInterval(async () => {
@@ -1212,12 +1259,7 @@ function startPartyPolling() {
         try {
             const game = await fetchGame(multiplayer.gameId);
             if (!game) return;
-            multiplayer.opponentJoined = !!game.player_2_id;
-            updatePartyScoreboard(game);
-            if (game.status === 'active' && multiplayer.opponentJoined) {
-                setPartyStatus('Opponent joined. First to ' + TARGET_MULTIPLAYER_SCORE + ' points wins. Click Pick Mode to start.');
-            }
-            if (game.status === 'finished') handleFinishedParty(game);
+            handlePartyGameUpdate(game);
         } catch (e) {
             console.warn('Party poll error:', e?.message || e);
         }
@@ -1432,13 +1474,7 @@ function subscribeToParty() {
             table: 'multiplayer_games',
             filter: 'id=eq.' + multiplayer.gameId
         }, payload => {
-            const game = payload.new;
-            multiplayer.opponentJoined = !!game.player_2_id;
-            updatePartyScoreboard(game);
-            if (game.status === 'active' && multiplayer.opponentJoined) {
-                setPartyStatus('Opponent joined. First to ' + TARGET_MULTIPLAYER_SCORE + ' points wins. Click Pick Mode to start.');
-            }
-            if (game.status === 'finished') handleFinishedParty(game);
+            handlePartyGameUpdate(payload.new);
         })
         .subscribe();
 }
@@ -1483,7 +1519,7 @@ async function initMultiplayerFromUrlOrSession() {
         } else if (game.status === 'finished') {
             handleFinishedParty(game);
         } else {
-            setPartyStatus('Duel connected. First to ' + TARGET_MULTIPLAYER_SCORE + ' points wins. Click Pick Mode to start.');
+            handlePartyGameUpdate(game);
         }
         subscribeToParty();
         startPartyPolling();
