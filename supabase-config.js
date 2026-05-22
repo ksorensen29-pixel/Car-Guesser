@@ -9,11 +9,21 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 export const supabase = createClient(supabaseConfig.url, supabaseConfig.anon_key);
 
+// Optional override: set this to your deployed site origin (e.g. "https://your-site.example.com")
+// If empty, the app will compute the redirect target from the current window location.
+// Set this to your running site's base path so magic links point to the correct host.
+// Example for your local dev: 'http://localhost:56785/dashboard/'
+// Set this to your running site's base path so magic links point to the correct host.
+// Example for your local dev: 'http://localhost:56785/dashboard/'
+// Updated to user-provided local server:
+export const MAGIC_LINK_REDIRECT_BASE = 'http://localhost:57015/dashboard/';
+
 function getAppRootPath() {
   const { pathname } = window.location;
   const scriptMatsIndex = pathname.indexOf('/ScriptMats/');
   if (scriptMatsIndex !== -1) {
-    return pathname.slice(0, scriptMatsIndex + 1);
+    // If the app is deployed under /ScriptMats/, include that segment
+    return pathname.slice(0, scriptMatsIndex + '/ScriptMats/'.length);
   }
   if (pathname.endsWith('.html')) {
     return pathname.slice(0, pathname.lastIndexOf('/') + 1);
@@ -24,11 +34,24 @@ function getAppRootPath() {
 // Auth helper functions
 export async function signInWithEmail(email) {
   try {
-    const dashboardUrl = new URL('dashboard.html', new URL(getAppRootPath(), window.location.origin)).href;
+    // Runtime override (localStorage) can be used to force links without editing code.
+    let runtimeOverride = null;
+    try {
+      runtimeOverride = window.localStorage.getItem('magicLinkRedirectBase');
+    } catch (e) {
+      runtimeOverride = null;
+    }
+    // Prefer runtime override, then compiled constant, then computed origin
+    const base = (runtimeOverride && runtimeOverride.trim()) ? runtimeOverride.trim() : (MAGIC_LINK_REDIRECT_BASE && MAGIC_LINK_REDIRECT_BASE.trim() ? MAGIC_LINK_REDIRECT_BASE.trim() : `${window.location.origin}${getAppRootPath()}`);
+    const gameUrl = new URL('cargamehtml.html', base).href;
+    console.log('Magic link redirect target:', gameUrl, '(computed from base:', base, ')');
+    if (!MAGIC_LINK_REDIRECT_BASE && window.location.hostname && window.location.hostname.includes('github.dev')) {
+      console.warn('You are generating a magic link from a github.dev host; the emailed link will point to that host unless you set MAGIC_LINK_REDIRECT_BASE to your deployed origin.');
+    }
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: dashboardUrl
+        emailRedirectTo: gameUrl
       }
     });
     
@@ -289,4 +312,89 @@ export function subscribeToGameUpdates(gameId, callback) {
       payload => callback(payload)
     )
     .subscribe();
+}
+3
+// ---- Local guest helpers (device-only guest identity)
+const GUEST_KEY = 'carGuesserGuest';
+
+export function ensureGuest() {
+  try {
+    const raw = localStorage.getItem(GUEST_KEY);
+    if (raw) return JSON.parse(raw);
+    const deviceId = 'guest_' + Math.random().toString(36).substring(2, 10);
+    const guest = { deviceId, name: 'Guest ' + deviceId.slice(-4), createdAt: new Date().toISOString() };
+    localStorage.setItem(GUEST_KEY, JSON.stringify(guest));
+    return guest;
+  } catch (e) {
+    console.warn('ensureGuest error', e?.message || e);
+    return null;
+  }
+}
+
+export function getGuest() {
+  try {
+    const raw = localStorage.getItem(GUEST_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    console.warn('getGuest error', e?.message || e);
+    return null;
+  }
+}
+
+export function saveGuestScoreLocally(mode, score, carsGuessed) {
+  try {
+    const key = 'carGuesser_guest_scores';
+    const list = JSON.parse(localStorage.getItem(key) || '[]');
+    const guest = getGuest() || ensureGuest();
+    list.push({ id: Date.now(), guest_device_id: guest?.deviceId || null, guest_name: guest?.name || null, mode, score, carsGuessed, created_at: new Date().toISOString() });
+    localStorage.setItem(key, JSON.stringify(list));
+    return { success: true, data: list };
+  } catch (e) {
+    console.warn('saveGuestScoreLocally error', e?.message || e);
+    return { success: false, error: e?.message || e };
+  }
+}
+
+export function getGuestScores() {
+  try {
+    const key = 'carGuesser_guest_scores';
+    return JSON.parse(localStorage.getItem(key) || '[]');
+  } catch (e) {
+    console.warn('getGuestScores error', e?.message || e);
+    return [];
+  }
+}
+
+// Attempt to upload local guest scores to Supabase.
+// This will try to insert rows into `game_scores` with guest metadata fields.
+export async function uploadGuestScoresToSupabase() {
+  try {
+    const scores = getGuestScores();
+    if (!scores || scores.length === 0) return { success: true, inserted: 0, message: 'No guest scores to upload.' };
+
+    // Map local items into DB rows. We include guest_device_id and guest_name fields
+    // If your `game_scores` table does not accept these columns, the insert may fail.
+    const rows = scores.map(s => ({
+      user_id: null,
+      guest_device_id: s.guest_device_id || null,
+      guest_name: s.guest_name || null,
+      score: s.score,
+      cars_guessed: s.carsGuessed || s.cars_guessed || 0,
+      game_type: s.mode || s.game_type || 'single',
+      created_at: s.created_at || new Date().toISOString()
+    }));
+
+    const { data, error } = await supabase.from('game_scores').insert(rows).select();
+    if (error) {
+      console.warn('uploadGuestScoresToSupabase insert error', error.message || error);
+      return { success: false, error: error.message || error };
+    }
+
+    // On success, clear the local guest scores that were uploaded.
+    localStorage.removeItem('carGuesser_guest_scores');
+    return { success: true, inserted: (data || []).length, data };
+  } catch (e) {
+    console.warn('uploadGuestScoresToSupabase error', e?.message || e);
+    return { success: false, error: e?.message || e };
+  }
 }

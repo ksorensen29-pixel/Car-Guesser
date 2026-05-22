@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Car Guesser - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,32 +14,190 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background:
+                radial-gradient(circle at top left, rgba(232, 0, 29, 0.28), transparent 34%),
+                radial-gradient(circle at 80% 18%, rgba(255, 106, 0, 0.18), transparent 26%),
+                linear-gradient(135deg, #171725 0%, #0f1020 48%, #120f18 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: block;
+            color: whitesmoke;
+            overflow-x: hidden;
         }
 
         .login-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            padding: 60px 40px;
-            text-align: center;
-            max-width: 400px;
-            width: 100%;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(340px, 420px);
+            gap: 28px;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 36px 20px;
+        }
+
+        .login-hero {
+            position: relative;
+            padding: 28px 0;
+        }
+
+        .login-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.74);
+            font-size: 12px;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .login-hero h1 {
+            color: #f4f5f7;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: clamp(52px, 7vw, 88px);
+            line-height: 0.95;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .login-hero h1 span {
+            color: #ffc840;
+        }
+
+        .login-lead {
+            max-width: 560px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 18px;
+            line-height: 1.55;
+            margin-bottom: 26px;
+        }
+
+        .login-points {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            max-width: 680px;
+        }
+
+        .login-point {
+            padding: 16px;
+            border-radius: 16px;
+            background: rgba(8, 8, 12, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+        }
+
+        .login-point-label {
+            font-size: 11px;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.42);
+            margin-bottom: 6px;
+        }
+
+        .login-point-value {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 24px;
+            font-weight: 900;
+            color: white;
+            line-height: 1;
+        }
+
+        .login-panel {
+            background: rgba(8, 8, 12, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+            padding: 28px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+
+        .login-panel h2 {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 30px;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        /* Toast notifications */
+        #toastWrap{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:10px;z-index:9999;pointer-events:none}
+        .toast{pointer-events:auto;min-width:220px;max-width:420px;padding:12px 14px;border-radius:10px;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,0.5);font-size:13px;display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px) scale(0.98);transition:all 240ms cubic-bezier(.2,.9,.2,1)}
+        .toast.show{opacity:1;transform:translateY(0) scale(1)}
+        .toast.info{background:linear-gradient(90deg,#243b55,#141b2b)}
+        .toast.success{background:linear-gradient(90deg,#1b6b36,#0f3f21)}
+        .toast.error{background:linear-gradient(90deg,#6b1b1b,#3b0f0f)}
+        .toast .toast-icon{font-size:16px;opacity:0.95}
+        .toast .toast-body{flex:1}
+        }
+
+        .login-panel p {
+            color: rgba(255, 255, 255, 0.68);
+            line-height: 1.5;
+            margin-bottom: 22px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 24px;
+        }
+
+        .login-card .email-input {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        .login-card .email-input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .login-card .email-signin-btn {
+            border-radius: 14px;
+            margin-top: 6px;
+            background: linear-gradient(135deg, rgba(232, 0, 29, 0.96) 0%, rgba(255, 106, 0, 0.9) 52%, rgba(127, 156, 255, 0.74) 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 14px 30px rgba(232, 0, 29, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        .login-card .email-signin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 40px rgba(232, 0, 29, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            filter: saturate(1.05);
+        }
+
+        .login-footnote {
+            margin-top: 14px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.42);
+            line-height: 1.45;
         }
 
         .dashboard-container {
-            background: rgb(61, 61, 61);
+            background:
+                radial-gradient(circle at top left, rgba(232, 0, 29, 0.18), transparent 30%),
+                radial-gradient(circle at 90% 12%, rgba(255, 200, 64, 0.12), transparent 24%),
+                linear-gradient(180deg, rgba(8, 8, 12, 0.95) 0%, rgba(16, 16, 22, 0.98) 100%);
             color: whitesmoke;
             min-height: 100vh;
             padding: 20px;
         }
 
         h1 {
-            color: #667eea;
+            color: #ffc840;
             margin-bottom: 10px;
             font-size: 36px;
         }
@@ -61,7 +220,7 @@
         .email-signin-btn {
             width: 100%;
             padding: 12px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, rgba(232, 0, 29, 0.96) 0%, rgba(255, 106, 0, 0.9) 100%);
             color: white;
             border: none;
             border-radius: 5px;
@@ -73,7 +232,7 @@
 
         .email-signin-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 12px 26px rgba(232, 0, 29, 0.28);
         }
 
         .dashboard-header {
@@ -105,7 +264,7 @@
         }
 
         .user-info p {
-            color: rgb(200, 200, 200);
+            color: rgba(255, 255, 255, 0.6);
             font-size: 14px;
         }
 
@@ -128,6 +287,144 @@
             margin: 0 auto;
         }
 
+        .dashboard-tabs {
+            display: inline-flex;
+            gap: 8px;
+            padding: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(232, 0, 29, 0.95) 0%, rgba(255, 106, 0, 0.88) 100%);
+            color: white;
+            box-shadow: 0 8px 24px rgba(232, 0, 29, 0.24);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .live-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .live-stat {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .live-stat-label {
+            font-size: 12px;
+            color: rgb(200, 200, 200);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .live-stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .live-player-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .live-player-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .live-player-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .live-player-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+        }
+
+        .live-player-name {
+            font-weight: 700;
+            color: white;
+            margin-bottom: 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .live-player-email,
+        .live-player-meta {
+            font-size: 13px;
+            color: rgb(200, 200, 200);
+        }
+
+        .live-status-pill {
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            background: rgba(255, 200, 64, 0.12);
+            color: #ffc840;
+        }
+
+        .live-status-pill.active {
+            background: rgba(232, 0, 29, 0.16);
+            color: #ff8a94;
+        }
+
+        .live-empty {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            color: rgb(200, 200, 200);
+        }
+
         .section {
             margin-bottom: 40px;
         }
@@ -136,7 +433,7 @@
             font-size: 24px;
             margin-bottom: 20px;
             color: whitesmoke;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid rgba(232, 0, 29, 0.8);
             padding-bottom: 10px;
         }
 
@@ -148,19 +445,19 @@
         }
 
         .game-card {
-            background: rgb(80, 80, 80);
+            background: rgba(255, 255, 255, 0.04);
             padding: 30px;
             border-radius: 10px;
             text-align: center;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
-            border: 2px solid transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .game-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-            border-color: #667eea;
+            box-shadow: 0 14px 34px rgba(232, 0, 29, 0.16);
+            border-color: rgba(255, 106, 0, 0.3);
         }
 
         .game-card h3 {
@@ -177,7 +474,7 @@
 
         .play-btn {
             padding: 10px 30px;
-            background: #667eea;
+            background: linear-gradient(135deg, rgba(232, 0, 29, 0.96) 0%, rgba(255, 106, 0, 0.88) 100%);
             color: white;
             border: none;
             border-radius: 5px;
@@ -186,14 +483,85 @@
         }
 
         .play-btn:hover {
-            background: #764ba2;
+            filter: brightness(1.05);
         }
 
         .leaderboard {
-            background: rgb(80, 80, 80);
+            background: rgba(255, 255, 255, 0.04);
             border-radius: 10px;
             padding: 20px;
             overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .mode-leaderboard-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .leaderboard-mode-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        .leaderboard-mode-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .leaderboard-mode-label {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .leaderboard-mode-meta {
+            margin-top: 4px;
+            color: rgb(200, 200, 200);
+            font-size: 13px;
+        }
+
+        .leaderboard-mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .leaderboard-score-box {
+            background: rgba(8, 8, 12, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .leaderboard-score-box-muted {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .leaderboard-score-kicker {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgb(200, 200, 200);
+            margin-bottom: 8px;
+        }
+
+        .leaderboard-score-value {
+            font-size: 34px;
+            font-weight: 900;
+            line-height: 1;
+            color: white;
+        }
+
+        .leaderboard-score-sub {
+            margin-top: 8px;
+            font-size: 13px;
+            color: rgb(200, 200, 200);
         }
 
         table {
@@ -205,22 +573,22 @@
         th {
             text-align: left;
             padding: 15px;
-            background: rgb(60, 60, 60);
-            border-bottom: 2px solid #667eea;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 2px solid rgba(232, 0, 29, 0.8);
         }
 
         td {
             padding: 15px;
-            border-bottom: 1px solid rgb(100, 100, 100);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         tr:hover {
-            background: rgb(90, 90, 90);
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .rank {
             font-weight: bold;
-            color: #667eea;
+            color: #ffc840;
         }
 
         .loading {
@@ -255,12 +623,13 @@
         }
 
         .modal-content {
-            background: rgb(61, 61, 61);
+            background: linear-gradient(180deg, rgba(14, 14, 20, 0.98) 0%, rgba(22, 22, 30, 0.98) 100%);
             padding: 40px;
             border-radius: 10px;
             max-width: 500px;
             color: whitesmoke;
             text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .modal-content h2 {
@@ -272,7 +641,9 @@
             padding: 10px;
             margin-bottom: 10px;
             border-radius: 5px;
-            border: 1px solid #667eea;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            color: white;
         }
 
         .modal-buttons {
@@ -290,39 +661,440 @@
         }
 
         .btn-primary {
-            background: #667eea;
+            background: linear-gradient(135deg, rgba(232, 0, 29, 0.96) 0%, rgba(255, 106, 0, 0.88) 100%);
             color: white;
         }
 
         .btn-primary:hover {
-            background: #764ba2;
+            filter: brightness(1.05);
         }
 
         .btn-secondary {
-            background: rgb(100, 100, 100);
+            background: rgba(255, 255, 255, 0.08);
             color: whitesmoke;
         }
 
         .btn-secondary:hover {
-            background: rgb(120, 120, 120);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .logout-btn {
+            background: rgba(255, 106, 0, 0.18);
+            border: 1px solid rgba(255, 106, 0, 0.25);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 106, 0, 0.28);
+        }
+    </style>
+    <style>
+        :root {
+            --red: #E8001D;
+            --orange: #ff6a00;
+            --yellow: #ffc840;
+            --green: #00d46a;
+            --blue: #0088ff;
+            --black: #060608;
+            --surface: #0f0f12;
+            --surface2: #16161a;
+            --surface3: #1e1e24;
+            --border: rgba(255,255,255,0.06);
+            --border2: rgba(255,255,255,0.12);
+            --text: #f0f0f0;
+            --muted: rgba(255,255,255,0.35);
+        }
+
+        body {
+            font-family: 'Barlow', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(232,0,29,0.18), transparent 30%),
+                radial-gradient(circle at 90% 12%, rgba(255,200,64,0.12), transparent 24%),
+                linear-gradient(180deg, rgba(6,6,8,1) 0%, rgba(10,10,14,1) 100%);
+            color: var(--text);
+        }
+
+        .dashboard-container {
+            position: relative;
+            background: transparent;
+            color: var(--text);
+        }
+
+        .dashboard-container::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.35;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.85), transparent 80%);
+        }
+
+        .login-panel,
+        .dashboard-header,
+        .dashboard-tabs,
+        .game-card,
+        .leaderboard-mode-card,
+        .leaderboard-score-box,
+        .modal-content,
+        .login-card,
+        .live-stat,
+        .live-player-card,
+        .live-empty {
+            background: rgba(15,15,18,0.74);
+            border: 1px solid var(--border);
+            box-shadow: 0 18px 42px rgba(0,0,0,0.28);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .login-panel h2,
+        .section h2,
+        .game-card h3,
+        .leaderboard-mode-label,
+        .user-info h2,
+        .modal-content h2,
+        .dashboard-header h1 {
+            font-family: 'Barlow Condensed', sans-serif;
+            letter-spacing: 1.4px;
+        }
+
+        .login-panel h2,
+        .section h2 {
+            color: #fff;
+        }
+
+        .dashboard-header {
+            border-radius: 18px;
+            padding: 14px 18px;
+            margin-bottom: 28px;
+        }
+
+        .dashboard-tabs {
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            padding: 6px;
+        }
+
+        .tab-btn,
+        .play-btn,
+        .btn-primary,
+        .btn-secondary,
+        .logout-btn {
+            font-family: 'Barlow Condensed', sans-serif;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .tab-btn {
+            border-radius: 999px;
+            border: 1px solid transparent;
+            color: var(--muted);
+            background: transparent;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, rgba(232,0,29,0.95) 0%, rgba(255,106,0,0.88) 100%);
+            box-shadow: 0 10px 24px rgba(232,0,29,0.24);
+        }
+
+        .section h2 {
+            border-bottom: 2px solid rgba(232,0,29,0.8);
+            padding-bottom: 10px;
+        }
+
+        .game-card {
+            border-radius: 16px;
+            padding: 28px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255,106,0,0.3);
+            box-shadow: 0 14px 34px rgba(232,0,29,0.16);
+        }
+
+        .game-card h3,
+        .leaderboard-mode-label {
+            color: #fff;
+        }
+
+        .game-card p,
+        .leaderboard-mode-meta,
+        .leaderboard-score-sub,
+        .login-panel p,
+        .user-info p,
+        .live-player-email,
+        .live-player-meta,
+        .live-empty,
+        .loading {
+            color: var(--muted);
+        }
+
+        .play-btn,
+        .btn-primary,
+        .email-signin-btn {
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(135deg, rgba(232,0,29,0.96) 0%, rgba(255,106,0,0.88) 100%);
+            color: #fff;
+            box-shadow: 0 10px 26px rgba(232,0,29,0.22);
+        }
+
+        .play-btn:hover,
+        .btn-primary:hover,
+        .email-signin-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
+        .btn-secondary,
+        .logout-btn,
+        .guest-btn {
+            border-radius: 10px;
+            border: 1px solid var(--border2);
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+        }
+
+        .btn-secondary:hover,
+        .logout-btn:hover,
+        .guest-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .email-input,
+        .modal-content input {
+            background: var(--surface2);
+            border-color: var(--border);
+            color: #fff;
+        }
+
+        .login-card {
+            background: rgba(8,8,12,0.45);
+            border-radius: 18px;
+            border: 1px solid var(--border);
+        }
+
+        .leaderboard-mode-card,
+        .leaderboard-score-box {
+            border-radius: 16px;
+        }
+
+        .leaderboard-score-value {
+            color: #fff;
+            font-family: 'Barlow Condensed', sans-serif;
+        }
+
+        .modal-content {
+            border-radius: 18px;
+            border: 1px solid var(--border);
+        }
+
+        .profile-img {
+            border: 1px solid var(--border);
+        }
+
+        /* Final polish pass to keep the dashboard visually locked to the game page */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 20% 18%, rgba(232,0,29,0.12), transparent 18%),
+                radial-gradient(circle at 82% 14%, rgba(255,106,0,0.12), transparent 16%),
+                radial-gradient(circle at 50% 78%, rgba(255,200,64,0.08), transparent 22%);
+            mix-blend-mode: screen;
+            opacity: 0.9;
+        }
+
+        .login-hero h1,
+        .dashboard-header h1 {
+            text-shadow: 0 0 26px rgba(232,0,29,0.15), 0 0 40px rgba(255,106,0,0.08);
+        }
+
+        .login-lead,
+        .section h2,
+        .leaderboard-mode-label,
+        .user-info h2 {
+            letter-spacing: 1.1px;
+        }
+
+        .login-point {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-point::before,
+        .game-card::before,
+        .leaderboard-mode-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 38%, rgba(255,255,255,0.03));
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        .login-point:hover::before,
+        .game-card:hover::before,
+        .leaderboard-mode-card:hover::before {
+            opacity: 1;
+        }
+
+        .login-point-value,
+        .leaderboard-score-value,
+        .price-display,
+        .round-num {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .dashboard-header {
+            box-shadow: 0 24px 80px rgba(0,0,0,0.28);
+        }
+
+        .dashboard-tabs {
+            box-shadow: 0 12px 36px rgba(0,0,0,0.18);
+        }
+
+        .tab-btn,
+        .play-btn,
+        .btn-primary,
+        .btn-secondary,
+        .logout-btn,
+        .guest-btn {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease, filter 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .game-card,
+        .leaderboard-mode-card,
+        .leaderboard-score-box,
+        .login-card,
+        .modal-content {
+            overflow: hidden;
+        }
+
+        .game-card::before,
+        .leaderboard-mode-card::before {
+            z-index: 0;
+        }
+
+        .game-card > *,
+        .leaderboard-mode-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-card h3 {
+            font-size: 22px;
+        }
+
+        .leaderboard-mode-card {
+            border-radius: 18px;
+        }
+
+        .leaderboard-score-box {
+            border-radius: 14px;
+        }
+
+        .modal-content input:focus,
+        .email-input:focus {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(232,0,29,0.12);
+            outline: none;
+        }
+
+        .login-card {
+            box-shadow: 0 22px 50px rgba(0,0,0,0.28);
+        }
+
+        .section h2 {
+            border-bottom-color: rgba(255,106,0,0.8);
+            text-transform: uppercase;
+        }
+
+        .leaderboard-score-kicker {
+            color: rgba(255,255,255,0.5);
+            letter-spacing: 1.8px;
+        }
+
+        .mode-leaderboard-grid {
+            gap: 16px;
+        }
+
+        .loading,
+        .live-empty {
+            border-style: dashed;
         }
     </style>
 </head>
 <body>
 
 <div id="loginContainer" class="login-container">
-    <h1>🏎️ CARGUESSER</h1>
-    <p class="subtitle">Guess the cars. Compete with friends. Dominate the leaderboard.</p>
-    <input
-        class="email-input"
-        id="emailInput"
-        type="email"
-        placeholder="Enter your email"
-        autocomplete="email"
-    />
-    <button class="email-signin-btn" onclick="handleEmailSignIn()">
-        🔐 Sign in with Email
-    </button>
+    <section class="login-hero">
+        <div class="login-eyebrow">CarGuesser Dashboard</div>
+        <h1>Race, guess, and climb the board.</h1>
+        <p class="login-lead">This is the main front page now. Sign in here to play, check the mode leaderboard, or jump into a game without hunting for another screen.</p>
+        <div class="login-points">
+            <div class="login-point">
+                <div class="login-point-label">Modes</div>
+                <div class="login-point-value">3</div>
+            </div>
+            <div class="login-point">
+                <div class="login-point-label">Leaderboard</div>
+                <div class="login-point-value">Live</div>
+            </div>
+            <div class="login-point">
+                <div class="login-point-label">Play</div>
+                <div class="login-point-value">Ready</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="login-panel">
+        <h2>Enter the race</h2>
+        <p>Use your email to save scores and get into the dashboard.</p>
+        <div class="login-card">
+            <input
+                class="email-input"
+                id="emailInput"
+                type="email"
+                placeholder="Enter your email"
+                autocomplete="email"
+            />
+            <button class="email-signin-btn" onclick="handleEmailSignIn()">
+                🔐 Sign in with Email
+            </button>
+            <button id="guestPlayBtn" class="guest-btn" onclick="handleGuestPlay()" style="margin-top:10px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 12px;border-radius:8px;">
+                👤 Play as Guest
+            </button>
+            <div class="login-footnote">After sign-in, the email link opens the game directly and this device remembers your address.</div>
+            <div style="margin-top:12px;border-top:1px dashed rgba(255,255,255,0.04);padding-top:12px;font-size:13px;color:rgba(255,255,255,0.7);">
+                <div style="margin-bottom:8px;">Debug: Magic link target — <span id="magicTarget" style="font-weight:700;">(hidden)</span></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn-secondary" onclick="showMagicTarget()">Show target</button>
+                    <button class="btn-primary" onclick="testMagicLink()">Send test magic link</button>
+                </div>
+                <div style="margin-top:8px;color:rgba(255,255,255,0.55);font-size:12px;">Use <em>Send test magic link</em> to generate a fresh OTP email; check the console for the printed redirect target.</div>
+                <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+                    <input id="magicBaseInput" placeholder="Optional redirect base (https://host/ or http://localhost:56785/dashboard/)" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:rgba(0,0,0,0.2);color:white" />
+                    <button class="btn-primary" onclick="saveMagicBase()">Save</button>
+                    <button class="btn-secondary" onclick="clearMagicBase()">Clear</button>
+                </div>
+                <div style="margin-top:8px;color:rgba(255,255,255,0.45);font-size:12px;">Save a redirect base to force magic links to a specific origin without editing code.</div>
+            </div>
+        </div>
+    </section>
 </div>
 
 <div id="dashboardContainer" class="dashboard-container" style="display: none;">
@@ -339,31 +1111,56 @@
     </div>
 
     <div class="dashboard-content">
-        <div class="section">
-            <h2>🎮 Game Modes</h2>
-            <div class="game-modes">
-                <div class="game-card" onclick="startSinglePlayer()">
-                    <h3>Single Player</h3>
-                    <p>Test your car knowledge solo</p>
-                    <button class="play-btn">Play Now</button>
-                </div>
-                <div class="game-card" onclick="showCreateMultiplayerModal()">
-                    <h3>Multiplayer</h3>
-                    <p>Compete with a friend</p>
-                    <button class="play-btn">Create Game</button>
-                </div>
-                <div class="game-card" onclick="showJoinMultiplayerModal()">
-                    <h3>Join Game</h3>
-                    <p>Join a friend's game</p>
-                    <button class="play-btn">Join</button>
+        <div class="dashboard-tabs" role="tablist" aria-label="Dashboard sections">
+            <button class="tab-btn active" id="playTabBtn" onclick="switchDashboardTab('play')">Play</button>
+            <button class="tab-btn" id="leaderboardTabBtn" onclick="switchDashboardTab('leaderboard')">Leaderboard</button>
+        </div>
+
+        <div id="playTab" class="tab-panel active">
+            <div class="section">
+                <h2>🎮 Game Modes</h2>
+                <div class="game-modes">
+                    <div class="game-card" onclick="startSinglePlayer()">
+                        <h3>Single Player</h3>
+                        <p>Test your car knowledge solo</p>
+                        <button class="play-btn">Play Now</button>
+                    </div>
+                    <div class="game-card" onclick="showCreateMultiplayerModal()">
+                        <h3>1v1 Duel</h3>
+                        <p>Challenge a friend head-to-head</p>
+                        <button class="play-btn">Create Duel</button>
+                    </div>
+                    <div class="game-card" onclick="showJoinMultiplayerModal()">
+                        <h3>Join Duel</h3>
+                        <p>Enter your friend's 1v1 code</p>
+                        <button class="play-btn">Join Duel</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="section">
-            <h2>🏆 Global Leaderboard</h2>
-            <div class="leaderboard">
-                <div id="leaderboardContent" class="loading">Loading leaderboard...</div>
+        <div id="leaderboardTab" class="tab-panel">
+            <div class="section">
+                <h2>🏆 Mode Leaderboard</h2>
+                <div id="leaderboardContent" class="mode-leaderboard-grid">
+                    <div class="loading">Loading mode leaderboard...</div>
+                </div>
+                <div id="localGuestScores" style="margin-top:18px;border-top:1px dashed rgba(255,255,255,0.04);padding-top:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <div>
+                            <h3 style="margin:0 0 6px 0;">🧾 Local Guest Scores</h3>
+                            <div style="font-size:12px;color:var(--muted);">Scores saved on this device when you played as guest.</div>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center;">
+                            <button class="btn-secondary" onclick="renderLocalGuestScores()">Refresh</button>
+                            <button class="btn-primary" onclick="uploadGuestScores()">Upload to Supabase</button>
+                            <button class="btn-secondary" onclick="clearGuestScores()">Clear</button>
+                        </div>
+                    </div>
+                    <div id="localGuestScoresContent" style="display:block;gap:8px;">
+                        <div class="loading">No local scores yet.</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -371,9 +1168,9 @@
 
 <div id="createGameModal" class="modal">
     <div class="modal-content">
-        <h2>Create Multiplayer Game</h2>
-        <p id="gameCode" style="font-size: 24px; color: #667eea; margin: 20px 0;"></p>
-        <p style="margin-bottom: 20px;">Share this code with your friend!</p>
+        <h2>Create 1v1 Duel</h2>
+        <p id="gameCode" style="font-size: 24px; color: #ffc840; margin: 20px 0;"></p>
+        <p style="margin-bottom: 20px;">Share this duel code with your friend!</p>
         <button class="play-btn" onclick="copyGameCode()">📋 Copy Code</button>
         <button class="btn-secondary" onclick="closeModal('createGameModal')" style="margin-top: 10px;">Close</button>
     </div>
@@ -381,7 +1178,7 @@
 
 <div id="joinGameModal" class="modal">
     <div class="modal-content">
-        <h2>Join Multiplayer Game</h2>
+        <h2>Join 1v1 Duel</h2>
         <input type="text" id="gameCodeInput" placeholder="Enter game code" maxlength="6">
         <div class="modal-buttons">
             <button class="btn-primary" onclick="joinMultiplayerGame()">Join</button>
@@ -397,25 +1194,69 @@
         signOut, 
         getCurrentUser, 
         updateUserProfile,
-        getLeaderboard,
         createMultiplayerGame,
-        joinMultiplayerGame
+        joinMultiplayerGame,
+        ensureGuest,
+        getGuestScores,
+        uploadGuestScoresToSupabase
     } from './supabase-config.js?v=20260519-2';
 
     let currentUser = null;
 
+    // Toast helper
+    function showToast(message, type = 'info', duration = 4200) {
+        try {
+            let wrap = document.getElementById('toastWrap');
+            if (!wrap) {
+                wrap = document.createElement('div');
+                wrap.id = 'toastWrap';
+                wrap.setAttribute('aria-live', 'polite');
+                document.body.appendChild(wrap);
+            }
+            const t = document.createElement('div');
+            t.className = 'toast ' + (type || 'info');
+            t.innerHTML = `<div class="toast-icon">${type==='error'?'⚠️':type==='success'?'✅':'🔔'}</div><div class="toast-body">${String(message)}</div>`;
+            wrap.appendChild(t);
+            requestAnimationFrame(() => t.classList.add('show'));
+            setTimeout(() => {
+                t.classList.remove('show');
+                setTimeout(() => t.remove(), 240);
+            }, duration);
+            return t;
+        } catch (e) { console.warn('showToast error', e); }
+    }
+    const leaderboardModes = [
+        { key: 'classic', label: 'Classic' },
+        { key: 'reveal', label: 'Reveal Rush' },
+        { key: 'price', label: 'Price Guesser' }
+    ];
+    const rememberedEmailKey = 'carGuesserEmail';
+
     // Initialize on page load
     async function init() {
+        loadRememberedEmail();
         await checkAuthStatus();
         if (currentUser) {
-            const profileResult = await syncUserProfile();
-            if (!profileResult.success) {
-                console.warn('Profile sync error:', profileResult.error);
-            }
-            displayDashboard();
-            loadLeaderboard();
+            window.location.href = 'cargamehtml.html';
         }
     }
+
+    window.switchDashboardTab = function(tabName) {
+        const playTab = document.getElementById('playTab');
+        const leaderboardTab = document.getElementById('leaderboardTab');
+        const playBtn = document.getElementById('playTabBtn');
+        const leaderboardBtn = document.getElementById('leaderboardTabBtn');
+
+        const isLeaderboard = tabName === 'leaderboard';
+        const isPlay = tabName === 'play';
+        playTab.classList.toggle('active', isPlay);
+        leaderboardTab.classList.toggle('active', isLeaderboard);
+        playBtn.classList.toggle('active', isPlay);
+        leaderboardBtn.classList.toggle('active', isLeaderboard);
+        if (isLeaderboard) {
+            loadModeLeaderboard();
+        }
+    };
 
     supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
@@ -424,8 +1265,7 @@
             if (!profileResult.success) {
                 console.warn('Profile sync error:', profileResult.error);
             }
-            displayDashboard();
-            loadLeaderboard();
+            window.location.href = 'cargamehtml.html';
         }
     });
 
@@ -433,6 +1273,15 @@
         const user = await getCurrentUser();
         if (user) {
             currentUser = user;
+        }
+    }
+
+    function loadRememberedEmail() {
+        const savedEmail = localStorage.getItem(rememberedEmailKey);
+        if (!savedEmail) return;
+        const emailInput = document.getElementById('emailInput');
+        if (emailInput && !emailInput.value) {
+            emailInput.value = savedEmail;
         }
     }
 
@@ -452,20 +1301,114 @@
 
     window.handleEmailSignIn = async function() {
         const emailInput = document.getElementById('emailInput');
-        const email = emailInput.value.trim();
+        const email = emailInput.value.trim() || localStorage.getItem(rememberedEmailKey) || '';
         if (!email) {
-            alert('Please enter an email address.');
+            showToast('Please enter an email address.', 'error');
             return;
         }
+
+        localStorage.setItem(rememberedEmailKey, email);
+        emailInput.value = email;
 
         const result = await signInWithEmail(email);
         if (!result.success) {
-            alert('Sign in failed: ' + result.error);
+            showToast('Sign in failed: ' + result.error, 'error');
             return;
         }
 
-        alert('Check your email for the sign-in link.');
+        showToast('Check your email for the sign-in link. It will open the game directly.', 'info', 6000);
     };
+
+    window.handleGuestPlay = function() {
+        try {
+            const guest = ensureGuest();
+            if (guest) {
+                    showToast('Playing as ' + guest.name + '.', 'success', 2500);
+                }
+        } catch (e) {
+            console.warn('handleGuestPlay error', e?.message || e);
+        }
+        window.location.href = 'cargamehtml.html';
+    };
+
+    // Debug helpers to compute and show the magic-link redirect target client-side
+    function computeAppRootPath() {
+        const pathname = window.location.pathname;
+        const scriptMatsIndex = pathname.indexOf('/ScriptMats/');
+        if (scriptMatsIndex !== -1) {
+            return pathname.slice(0, scriptMatsIndex + '/ScriptMats/'.length);
+        }
+        if (pathname.endsWith('.html')) {
+            return pathname.slice(0, pathname.lastIndexOf('/') + 1);
+        }
+        return pathname.endsWith('/') ? pathname : `${pathname}/`;
+    }
+
+    window.computeMagicLinkTarget = function() {
+        const root = computeAppRootPath();
+        return new URL('cargamehtml.html', `${window.location.origin}${root}`).href;
+    };
+
+    window.showMagicTarget = function() {
+        try {
+            const target = window.computeMagicLinkTarget();
+            const el = document.getElementById('magicTarget');
+            if (el) el.textContent = target;
+            console.log('Computed magic link redirect target:', target);
+            showToast('Computed magic link target printed to console.', 'info', 4200);
+        } catch (e) { console.warn('showMagicTarget error', e); }
+    };
+
+    window.testMagicLink = async function() {
+        const emailInput = document.getElementById('emailInput');
+        const email = (emailInput && emailInput.value) ? emailInput.value.trim() : (localStorage.getItem(rememberedEmailKey) || '');
+        if (!email) {
+            showToast('Enter an email to test.', 'error');
+            return;
+        }
+        showToast('Requesting test magic link — check your email and console.', 'info', 6000);
+        const result = await signInWithEmail(email);
+        if (!result.success) {
+            showToast('Sign-in request failed: ' + result.error, 'error');
+            return;
+        }
+        showToast('Magic link requested. Check email and console for redirect URL.', 'success');
+    };
+
+    // Runtime setter for magic link redirect base (saves to localStorage)
+    window.saveMagicBase = function() {
+        try {
+            const input = document.getElementById('magicBaseInput');
+            if (!input) return;
+            const val = input.value.trim();
+            if (!val) {
+                showToast('Enter a URL to save, or click Clear.', 'error');
+                return;
+            }
+            window.localStorage.setItem('magicLinkRedirectBase', val);
+            showToast('Saved redirect base. It will be used for new magic links.', 'success');
+            showMagicTarget();
+        } catch (e) { console.warn('saveMagicBase error', e); }
+    };
+
+    window.clearMagicBase = function() {
+        try {
+            window.localStorage.removeItem('magicLinkRedirectBase');
+            const input = document.getElementById('magicBaseInput');
+            if (input) input.value = '';
+            showToast('Cleared redirect base. Links will use computed origin.', 'info');
+            showMagicTarget();
+        } catch (e) { console.warn('clearMagicBase error', e); }
+    };
+
+    // Pre-fill the magicBaseInput from localStorage if present
+    (function() {
+        try {
+            const saved = window.localStorage.getItem('magicLinkRedirectBase');
+            const input = document.getElementById('magicBaseInput');
+            if (saved && input) input.value = saved;
+        } catch (e) { /* ignore */ }
+    })();
 
     window.handleLogout = async function() {
         const result = await signOut();
@@ -485,46 +1428,74 @@
         }
     }
 
-    async function loadLeaderboard() {
-        const result = await getLeaderboard(10);
+    async function loadModeLeaderboard() {
         const container = document.getElementById('leaderboardContent');
-        
-        if (!result.success) {
-            container.innerHTML = `<div class="error">Failed to load leaderboard</div>`;
-            return;
+        try {
+            const { data: scores, error } = await supabase
+                .from('game_scores')
+                .select('game_type, score, cars_guessed, created_at, users(name)')
+                .in('game_type', leaderboardModes.map(mode => mode.key))
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            const grouped = new Map(leaderboardModes.map(mode => [mode.key, []]));
+            (scores || []).forEach(entry => {
+                if (grouped.has(entry.game_type)) {
+                    grouped.get(entry.game_type).push(entry);
+                }
+            });
+
+            // Merge local guest scores stored in localStorage
+            try {
+                const guestScores = getGuestScores() || [];
+                guestScores.forEach(g => {
+                    if (!g || !g.mode) return;
+                    if (!grouped.has(g.mode)) return;
+                    grouped.get(g.mode).push({
+                        game_type: g.mode,
+                        score: g.score,
+                        cars_guessed: g.carsGuessed || g.cars_guessed || 0,
+                        created_at: g.created_at,
+                        users: { name: (g.guest_name || 'Guest').substring(0,32) }
+                    });
+                });
+            } catch (e) {
+                console.warn('Could not merge guest scores:', e?.message || e);
+            }
+
+            container.innerHTML = leaderboardModes.map(mode => {
+                const entries = grouped.get(mode.key) || [];
+                const best = entries.reduce((top, entry) => top === null || entry.score > top.score ? entry : top, null);
+                const worst = entries.reduce((bottom, entry) => bottom === null || entry.score < bottom.score ? entry : bottom, null);
+
+                return `
+                    <div class="leaderboard-mode-card">
+                        <div class="leaderboard-mode-head">
+                            <div>
+                                <div class="leaderboard-mode-label">${mode.label}</div>
+                                <div class="leaderboard-mode-meta">${entries.length} score${entries.length === 1 ? '' : 's'} recorded</div>
+                            </div>
+                        </div>
+                        <div class="leaderboard-mode-grid">
+                            <div class="leaderboard-score-box">
+                                <div class="leaderboard-score-kicker">Best</div>
+                                <div class="leaderboard-score-value">${best ? best.score : '—'}</div>
+                                <div class="leaderboard-score-sub">${best ? (best.users?.name || 'Anonymous') : 'No scores yet'}</div>
+                            </div>
+                            <div class="leaderboard-score-box leaderboard-score-box-muted">
+                                <div class="leaderboard-score-kicker">Worst</div>
+                                <div class="leaderboard-score-value">${worst ? worst.score : '—'}</div>
+                                <div class="leaderboard-score-sub">${worst ? (worst.users?.name || 'Anonymous') : 'No scores yet'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.warn('Could not load mode leaderboard:', error?.message || error);
+            container.innerHTML = '<div class="error">Failed to load mode leaderboard.</div>';
         }
-
-        if (result.data.length === 0) {
-            container.innerHTML = '<p>No scores yet. Be the first to play!</p>';
-            return;
-        }
-
-        let html = `
-            <table>
-                <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Player</th>
-                        <th>Score</th>
-                        <th>Cars Guessed</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        result.data.forEach((entry, index) => {
-            html += `
-                <tr>
-                    <td class="rank">#${index + 1}</td>
-                    <td>${entry.users?.name || 'Anonymous'}</td>
-                    <td>${entry.score}</td>
-                    <td>${entry.cars_guessed}</td>
-                </tr>
-            `;
-        });
-
-        html += '</tbody></table>';
-        container.innerHTML = html;
     }
 
     window.startSinglePlayer = function() {
@@ -534,7 +1505,7 @@
     window.showCreateMultiplayerModal = async function() {
         const profileResult = await syncUserProfile();
         if (!profileResult.success) {
-            alert('Unable to sync your profile: ' + profileResult.error);
+            showToast('Unable to sync your profile: ' + profileResult.error, 'error');
             return;
         }
         const result = await createMultiplayerGame(currentUser.id);
@@ -545,7 +1516,7 @@
             sessionStorage.setItem('multiplayerRole', 'host');
             window.location.href = `cargamehtml.html?gameId=${encodeURIComponent(game.id)}&gameCode=${encodeURIComponent(game.game_code)}&role=host`;
         } else {
-            alert('Error creating game: ' + result.error);
+            showToast('Error creating game: ' + result.error, 'error');
         }
     };
 
@@ -556,17 +1527,17 @@
     window.joinMultiplayerGame = async function() {
         const gameCode = document.getElementById('gameCodeInput').value.trim().toUpperCase();
         if (gameCode.length !== 6) {
-            alert('Invalid game code');
+            showToast('Invalid game code', 'error');
             return;
         }
         const profileResult = await syncUserProfile();
         if (!profileResult.success) {
-            alert('Unable to sync your profile: ' + profileResult.error);
+            showToast('Unable to sync your profile: ' + profileResult.error, 'error');
             return;
         }
         const result = await joinMultiplayerGame(gameCode, currentUser.id);
         if (!result.success || !result.data) {
-            alert('Unable to join game: ' + (result.error || 'Check the code and try again.'));
+            showToast('Unable to join game: ' + (result.error || 'Check the code and try again.'), 'error');
             return;
         }
         closeModal('joinGameModal');
@@ -579,7 +1550,61 @@
     window.copyGameCode = function() {
         const code = document.getElementById('gameCode').textContent;
         navigator.clipboard.writeText(code);
-        alert('Game code copied to clipboard!');
+        showToast('Game code copied to clipboard!', 'success');
+    };
+
+    function formatDateShort(iso) {
+        try {
+            const d = new Date(iso);
+            return d.toLocaleString();
+        } catch (e) { return iso; }
+    }
+
+    window.renderLocalGuestScores = function() {
+        const container = document.getElementById('localGuestScoresContent');
+        try {
+            const scores = getGuestScores() || [];
+            if (!scores.length) {
+                container.innerHTML = '<div class="loading">No local guest scores yet.</div>';
+                return;
+            }
+            container.innerHTML = scores.slice().reverse().map(s => {
+                return `
+                    <div style="padding:10px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                        <div>
+                            <div style="font-weight:700;">${s.guest_name || 'Guest'}</div>
+                            <div style="font-size:12px;color:var(--muted);">${s.mode} · ${s.carsGuessed || s.cars_guessed || 0} guesses · ${formatDateShort(s.created_at)}</div>
+                        </div>
+                        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;">${s.score}</div>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) {
+            console.warn('renderLocalGuestScores error', e?.message || e);
+            container.innerHTML = '<div class="error">Unable to read local guest scores.</div>';
+        }
+    };
+
+    window.clearGuestScores = function() {
+        if (!confirm('Clear all local guest scores from this device?')) return;
+        localStorage.removeItem('carGuesser_guest_scores');
+        renderLocalGuestScores();
+        showToast('Local guest scores cleared.', 'success');
+    };
+
+    window.uploadGuestScores = async function() {
+        try {
+            const res = await uploadGuestScoresToSupabase();
+            if (res.success) {
+                showToast('Uploaded ' + (res.inserted || 0) + ' guest scores to Supabase. Local copies cleared.', 'success');
+                renderLocalGuestScores();
+            } else {
+                showToast('Upload failed: ' + (res.error || res.message || 'Unknown error'), 'error');
+            }
+        } catch (e) {
+            console.warn('uploadGuestScores error', e?.message || e);
+            showToast('Upload failed: ' + (e?.message || e), 'error');
+        }
     };
 
     window.openModal = function(modalId) {

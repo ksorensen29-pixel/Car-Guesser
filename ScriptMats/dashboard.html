@@ -7,10 +7,7 @@
 </head>
 <body>
   <script>
-    const path = window.location.pathname;
-    const scriptMatsIndex = path.indexOf('/ScriptMats/');
-    const appRoot = scriptMatsIndex !== -1 ? path.slice(0, scriptMatsIndex + 1) : '/';
-    const target = new URL('dashboard.html', new URL(appRoot, window.location.origin));
+    const target = new URL('cargamehtml.html', window.location.href);
     target.search = window.location.search;
     target.hash = window.location.hash;
     window.location.replace(target.href);

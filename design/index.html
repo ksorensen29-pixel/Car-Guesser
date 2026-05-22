@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Car Guesser — Luxe Retro-Futuristic</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat+Alternates:wght@300;500;700&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="stage">
+    <div class="atmosphere"></div>
+    <div class="pattern-sheen" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="flare left" aria-hidden="true"></div>
+    <div class="flare right" aria-hidden="true"></div>
+    <section class="hero">
+      <div class="hero-left">
+        <div class="eyebrow">Collector's Edition</div>
+        <h1 class="title"><span class="accent">CAR</span> GUESSER</h1>
+        <p class="lead">A taste-driven game for petrolheads — guess the make from a silhouette, climb the leaderboard.</p>
+        <div class="controls">
+          <input id="email" class="control-input" type="email" placeholder="your@email.com" />
+          <div class="buttons">
+            <button id="playBtn" class="btn primary">Start the Race</button>
+            <button id="guestBtn" class="btn ghost">Play as Guest</button>
+          </div>
+        </div>
+        <div class="meta">
+          <div class="meta-item">
+            <div class="meta-num">2,847</div>
+            <div class="meta-label">Players</div>
+          </div>
+          <div class="meta-item">
+            <div class="meta-num">500</div>
+            <div class="meta-label">Cars</div>
+          </div>
+          <div class="meta-item subtle">
+            <div class="meta-label">New: Look for limited-rare cars in the vault</div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="hero-right">
+        <div class="card-visual">
+          <div class="diagonal" aria-hidden></div>
+          <img id="silhouetteImg" class="silhouette-img" alt="car silhouette" src="../ScriptMats/photos/1.jpeg" />
+          <div class="card-footer">Guess the make — 10s per round</div>
+        </div>
+      </aside>
+    </section>
+
+    <footer class="credits">
+      <div>Design prototype — <strong>Luxe Retro-Futuristic</strong></div>
+      <div class="links"><a href="../index.html">Return to current UI</a> · <a href="../cargamehtml.html">Play a round</a></div>
+    </footer>
+  </main>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

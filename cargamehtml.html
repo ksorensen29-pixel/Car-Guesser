@@ -3,793 +3,1531 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Car Guesser Game</title>
+    <title>CarGuesser – Play</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --red: #E8001D; --orange: #ff6a00; --yellow: #ffc840; --green: #00d46a; --blue: #0088ff;
+            --black: #060608; --surface: #0f0f12; --surface2: #16161a; --surface3: #1e1e24;
+            --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.12);
+            --text: #f0f0f0; --muted: rgba(255,255,255,0.35);
+        }
+        body { font-family:'Barlow',sans-serif; background:var(--black); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+        /* ── ANIMATIONS ── */
+        @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+        @keyframes popCorrect{0%{transform:scale(1)}40%{transform:scale(1.025)}100%{transform:scale(1)}}
+        @keyframes scoreBump{0%{transform:scale(1)}50%{transform:scale(1.5);color:var(--green)}100%{transform:scale(1)}}
+        @keyframes orbFloat{0%{transform:translate(0,0) scale(1)}33%{transform:translate(50px,-30px) scale(1.08)}66%{transform:translate(-30px,50px) scale(0.95)}100%{transform:translate(0,0) scale(1)}}
+        @keyframes confettiFall{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+        @keyframes revealPulse{0%,100%{box-shadow:0 0 0 0 rgba(232,0,29,0.4)}50%{box-shadow:0 0 0 12px rgba(232,0,29,0)}}
+        @keyframes timerTick{from{stroke-dashoffset:0}to{stroke-dashoffset:283}}
+        @keyframes blurReveal{from{filter:blur(30px)}to{filter:blur(0px)}}
+        @keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+
+        /* ── LOADING ── */
+        .loading-screen{position:fixed;inset:0;background:var(--black);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity 0.6s ease;}
+        .loading-screen.done{opacity:0;pointer-events:none;}
+        .loading-car{font-size:56px;animation:shake 0.5s ease-in-out infinite;}
+        .loading-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:56px;letter-spacing:4px;color:#fff;}
+        .loading-logo span{color:var(--red);}
+        .loading-bar-bg{width:240px;height:3px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;}
+        .loading-bar{height:100%;background:linear-gradient(90deg,var(--red),var(--orange));border-radius:3px;width:0;transition:width 0.1s linear;}
+        .loading-sub{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+
+        /* ── BG ── */
+        .bg-wrap{position:fixed;inset:0;z-index:0;overflow:hidden;}
+        .orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.18;animation:orbFloat linear infinite;}
+        .orb1{width:700px;height:700px;background:radial-gradient(circle,#E8001D,transparent);top:-300px;left:-200px;animation-duration:25s;}
+        .orb2{width:500px;height:500px;background:radial-gradient(circle,#6600ff,transparent);bottom:-200px;right:-100px;animation-duration:20s;animation-delay:-8s;}
+        .orb3{width:400px;height:400px;background:radial-gradient(circle,#ff6a00,transparent);top:50%;left:40%;animation-duration:18s;animation-delay:-5s;}
+        .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:50px 50px;}
+
+        /* ── NAV ── */
+        .nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 24px;background:rgba(6,6,8,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(24px);animation:slideDown 0.5s cubic-bezier(0.16,1,0.3,1) both;}
+        .nav-logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:2px;color:#fff;text-decoration:none;}
+        .nav-logo span{color:var(--red);}
+        .nav-center{display:flex;align-items:center;gap:12px;}
+        .score-wrap{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:2px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+        #scoreVal{font-size:26px;font-weight:900;color:#fff;display:inline-block;}
+        #scoreVal.bump{animation:scoreBump 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+        .streak-pill{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:1.5px;padding:4px 10px;border-radius:20px;background:rgba(255,200,64,0.1);border:1px solid rgba(255,200,64,0.2);color:var(--yellow);display:none;}
+        .streak-pill.show{display:block;}
+        .mode-badge{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:20px;display:none;}
+        .mode-badge.show{display:block;}
+        .mode-badge.classic{background:rgba(0,136,255,0.1);border:1px solid rgba(0,136,255,0.2);color:var(--blue);}
+        .mode-badge.reveal{background:rgba(232,0,29,0.1);border:1px solid rgba(232,0,29,0.2);color:var(--red);}
+        .mode-badge.price{background:rgba(0,212,106,0.1);border:1px solid rgba(0,212,106,0.2);color:var(--green);}
+        .home-btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--border2);border-radius:6px;padding:7px 14px;cursor:pointer;text-decoration:none;transition:all 0.2s;}
+        .home-btn:hover{color:#fff;border-color:rgba(255,255,255,0.3);}
+
+        /* ── PAGE TABS ── */
+        .page-tabs{max-width:700px;margin:12px auto 0;display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:20;padding:0 18px;}
+        .page-tab-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;padding:9px 14px;border-radius:999px;border:1px solid var(--border2);background:rgba(255,255,255,0.03);color:var(--muted);cursor:pointer;transition:all 0.2s;}
+        .page-tab-btn:hover{color:#fff;border-color:rgba(255,255,255,0.25);}
+        .page-tab-btn.active{background:var(--red);border-color:transparent;color:#fff;box-shadow:0 10px 24px rgba(232,0,29,0.25);}
+        .page-tab-panel{display:none;}
+        .page-tab-panel.active{display:block;}
+        .live-list{display:grid;gap:10px;}
+        .live-room-card{padding:14px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;}
+        .live-room-main{min-width:0;}
+        .live-room-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:1px;color:#fff;}
+        .live-room-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+        .live-room-pill{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--yellow);border:1px solid rgba(255,200,64,0.18);background:rgba(255,200,64,0.06);padding:6px 10px;border-radius:999px;white-space:nowrap;}
+        .live-empty{padding:18px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);text-align:center;}
+
+        /* ── PARTY / MULTIPLAYER ── */
+        .party-panel{max-width:700px;margin:12px auto 0;padding:12px 14px;border:1px solid var(--border);border-radius:12px;background:rgba(15,15,18,0.8);backdrop-filter:blur(10px);position:relative;z-index:20;display:grid;gap:10px;}
+        .party-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+        .party-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;}
+        .party-status{font-size:12px;color:var(--muted);display:none;}
+        .party-status.show{display:block;}
+        .party-actions{display:flex;gap:8px;flex-wrap:wrap;}
+        .party-btn{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;padding:8px 10px;border:1px solid var(--border2);border-radius:8px;background:var(--surface2);color:#fff;cursor:pointer;}
+        .party-btn:hover{border-color:rgba(255,255,255,0.3);}
+        .party-code{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;letter-spacing:2px;color:var(--yellow);}
+        .party-input{padding:8px 10px;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:#fff;font-family:'Barlow',sans-serif;font-size:13px;outline:none;}
+        .party-input:focus{border-color:var(--red);}
+        .party-scoreboard{display:none;grid-template-columns:1fr 1fr;gap:8px;}
+        .party-scoreboard.show{display:grid;}
+        .party-score-card{padding:10px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);}
+        .party-score-name{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+        .party-score-val{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1.1;}
+        .party-score-you .party-score-val{color:var(--green);}
+        .party-score-opp .party-score-val{color:var(--blue);}
+        .party-hidden{display:none !important;}
+
+        /* ── LAYOUT ── */
+        .wrap{max-width:700px;margin:0 auto;padding:28px 18px 80px;position:relative;z-index:10;}
+
+        /* ── MODE SELECT ── */
+        #modeSelect{animation:fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) both;}
+        .mode-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:36px;letter-spacing:2px;text-align:center;margin-bottom:6px;}
+        .mode-sub{color:var(--muted);font-size:14px;text-align:center;margin-bottom:32px;}
+        .mode-cards{display:grid;grid-template-columns:1fr;gap:12px;}
+        .mode-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 24px;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;display:flex;align-items:center;gap:20px;}
+        .mode-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity 0.2s;}
+        .mode-card:hover{transform:translateY(-2px);}
+        .mode-card.classic-card:hover{border-color:rgba(0,136,255,0.4);box-shadow:0 8px 32px rgba(0,136,255,0.15);}
+        .mode-card.classic-card::before{background:linear-gradient(90deg,transparent,var(--blue),transparent);}
+        .mode-card.classic-card:hover::before{opacity:1;}
+        .mode-card.reveal-card:hover{border-color:rgba(232,0,29,0.4);box-shadow:0 8px 32px rgba(232,0,29,0.15);}
+        .mode-card.reveal-card::before{background:linear-gradient(90deg,transparent,var(--red),transparent);}
+        .mode-card.reveal-card:hover::before{opacity:1;}
+        .mode-card.price-card:hover{border-color:rgba(0,212,106,0.4);box-shadow:0 8px 32px rgba(0,212,106,0.15);}
+        .mode-card.price-card::before{background:linear-gradient(90deg,transparent,var(--green),transparent);}
+        .mode-card.price-card:hover::before{opacity:1;}
+        .mode-icon{font-size:40px;flex-shrink:0;width:64px;height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center;}
+        .classic-card .mode-icon{background:rgba(0,136,255,0.1);}
+        .reveal-card .mode-icon{background:rgba(232,0,29,0.1);}
+        .price-card .mode-icon{background:rgba(0,212,106,0.1);}
+        .mode-info{flex:1;}
+        .mode-name{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:24px;letter-spacing:1px;margin-bottom:4px;}
+        .classic-card .mode-name{color:var(--blue);}
+        .reveal-card .mode-name{color:var(--red);}
+        .price-card .mode-name{color:var(--green);}
+        .mode-desc{font-size:13px;color:var(--muted);line-height:1.5;}
+        .mode-tag{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-top:8px;display:inline-block;}
+        .classic-card .mode-tag{background:rgba(0,136,255,0.1);color:var(--blue);}
+        .reveal-card .mode-tag{background:rgba(232,0,29,0.1);color:var(--red);}
+        .price-card .mode-tag{background:rgba(0,212,106,0.1);color:var(--green);}
+        .mode-arrow{font-size:24px;color:var(--muted);transition:transform 0.2s,color 0.2s;}
+        .mode-card:hover .mode-arrow{transform:translateX(4px);color:#fff;}
+
+        /* ── GAME SCREENS ── */
+        .game-screen{display:none;}
+        .game-screen.active{display:block;}
+
+        /* ── CAR CARD ── */
+        .car-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:12px;position:relative;animation:fadeUp 0.5s 0.1s cubic-bezier(0.16,1,0.3,1) both;}
+        .car-card.shake{animation:shake 0.4s ease!important;}
+        .car-card.correct{animation:popCorrect 0.4s ease!important;}
+        .car-top-bar{height:2px;background:linear-gradient(90deg,transparent,var(--red) 30%,var(--orange) 60%,transparent);animation:revealPulse 3s ease-in-out infinite;}
+        .car-img-wrap{width:100%;aspect-ratio:16/9;background:var(--surface2);position:relative;overflow:hidden;}
+        #img,#imgReveal,#imgPrice{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity 0.6s ease;position:relative;z-index:2;}
+        #img.visible,#imgReveal.visible,#imgPrice.visible{opacity:1;}
+        .skeleton{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+        .no-img{position:absolute;inset:0;z-index:3;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--muted);font-size:13px;background:var(--surface2);}
+        .no-img.show{display:flex;}
+        .no-img .icon{font-size:40px;opacity:0.3;}
+        .correct-flash{position:absolute;inset:0;z-index:10;background:rgba(0,212,106,0.15);opacity:0;pointer-events:none;transition:opacity 0.1s;}
+        .correct-flash.show{opacity:1;}
+
+        /* ── REVEAL MODE ── */
+        .reveal-overlay{position:absolute;inset:0;z-index:5;backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);transition:backdrop-filter 2s ease;}
+        .reveal-timer{position:absolute;top:12px;right:12px;z-index:6;width:56px;height:56px;}
+        .reveal-timer svg{transform:rotate(-90deg);}
+        .reveal-timer circle{fill:none;stroke:rgba(255,255,255,0.1);stroke-width:4;}
+        .reveal-timer .progress{stroke:var(--red);stroke-width:4;stroke-dasharray:157;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear;}
+        .reveal-timer-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:18px;color:#fff;}
+        .reveal-stage{position:absolute;bottom:12px;left:12px;z-index:6;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.6);background:rgba(0,0,0,0.5);padding:4px 10px;border-radius:20px;}
+
+        /* ── ROUND BAR ── */
+        .round-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:1px;color:var(--muted);animation:fadeUp 0.5s 0.05s cubic-bezier(0.16,1,0.3,1) both;}
+        .round-num{font-size:16px;font-weight:700;color:#fff;}
+
+        /* ── ACTION BUTTONS ── */
+        .action-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;animation:fadeUp 0.5s 0.2s cubic-bezier(0.16,1,0.3,1) both;}
+        .btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;border-radius:9px;padding:12px 8px;cursor:pointer;transition:transform 0.15s,box-shadow 0.2s;border:1px solid var(--border2);background:var(--surface);color:var(--muted);position:relative;overflow:hidden;}
+        .btn:hover{transform:translateY(-1px);color:#fff;border-color:rgba(255,255,255,0.25);}
+        .btn:active{transform:translateY(0);opacity:0.7;}
+        .btn-hint{color:var(--yellow);border-color:rgba(255,200,64,0.2);background:rgba(255,200,64,0.05);}
+        .btn-hint:hover{box-shadow:0 4px 20px rgba(255,200,64,0.15);}
+
+        /* ── FEEDBACK ── */
+        .feedback{border-radius:10px;font-size:14px;font-weight:500;margin-bottom:12px;padding:0 16px;max-height:0;overflow:hidden;opacity:0;transition:max-height 0.3s cubic-bezier(0.16,1,0.3,1),padding 0.3s,opacity 0.25s;border:1px solid transparent;}
+        .feedback.show{max-height:80px;padding:13px 16px;opacity:1;}
+        .feedback.correct{background:rgba(0,212,106,0.08);border-color:rgba(0,212,106,0.2);color:var(--green);}
+        .feedback.wrong{background:rgba(232,0,29,0.07);border-color:rgba(232,0,29,0.18);color:#ff7080;}
+        .feedback.hint{background:rgba(255,200,64,0.07);border-color:rgba(255,200,64,0.18);color:var(--yellow);}
+        .feedback.reveal{background:var(--surface2);border-color:var(--border);color:var(--muted);}
+
+        /* ── GUESS CARD ── */
+        .guess-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px 20px;animation:fadeUp 0.5s 0.3s cubic-bezier(0.16,1,0.3,1) both;}
+        .section-label{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+        .fields-row{display:grid;grid-template-columns:1fr 140px;gap:10px;margin-bottom:18px;}
+        .field-group{display:flex;flex-direction:column;gap:6px;}
+        .field-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;}
+        .field-input{padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'Barlow',sans-serif;color:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s;width:100%;}
+        .field-input::placeholder{color:rgba(255,255,255,0.18);}
+        .field-input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,0,29,0.12);}
+
+        /* ── MAP ── */
+        .map-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;}
+        #mapContainer,#mapContainerClassic{width:100%;height:240px;border-radius:10px;overflow:hidden;border:1px solid var(--border);margin-bottom:8px;background:var(--surface2);}
+        .selected-country{font-size:13px;color:var(--green);font-weight:500;min-height:20px;margin-bottom:16px;}
+        .country-fallback{margin-bottom:12px;}
+
+        /* ── PRICE SLIDER ── */
+        .price-section{margin-bottom:20px;}
+        .price-display{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:48px;text-align:center;color:#fff;margin:16px 0;letter-spacing:2px;}
+        .price-display span{color:var(--green);}
+        .price-slider{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;background:var(--surface2);outline:none;margin:12px 0;}
+        .price-slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--green);cursor:pointer;box-shadow:0 0 12px rgba(0,212,106,0.4);transition:transform 0.2s;}
+        .price-slider::-webkit-slider-thumb:hover{transform:scale(1.2);}
+        .price-range-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);letter-spacing:1px;}
+        .price-precise-row{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:end;margin-top:12px;}
+        .price-exact-input{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;}
+        .price-nudge-btn{padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:#fff;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;}
+        .price-nudge-btn:hover{border-color:rgba(255,255,255,0.3);}
+        .price-result{text-align:center;margin-top:16px;}
+        .price-actual{font-family:'Barlow Condensed',sans-serif;font-size:18px;color:var(--muted);margin-bottom:4px;}
+        .price-diff{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;}
+        .price-diff.close{color:var(--green);}
+        .price-diff.medium{color:var(--yellow);}
+        .price-diff.far{color:var(--red);}
+
+        /* ── SUBMIT ── */
+        .submit-btn{width:100%;padding:16px;background:var(--red);color:white;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;transition:transform 0.15s,box-shadow 0.2s;position:relative;overflow:hidden;}
+        .submit-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:translateX(-100%);transition:none;}
+        .submit-btn:hover::before{transform:translateX(100%);transition:transform 0.5s ease;}
+        .submit-btn:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(232,0,29,0.45);}
+        .submit-btn.green{background:var(--green);}
+        .submit-btn.green:hover{box-shadow:0 10px 36px rgba(0,212,106,0.45);}
+
+        /* ── CONFETTI ── */
+        .confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:500;overflow:hidden;}
+        .confetto{position:absolute;width:8px;height:8px;top:-10px;animation:confettiFall linear forwards;}
+
+        /* ── BACK BTN ── */
+        .back-btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:6px;padding:8px 16px;cursor:pointer;margin-bottom:20px;display:flex;align-items:center;gap:8px;transition:all 0.2s;width:fit-content;}
+        .back-btn:hover{color:#fff;border-color:var(--border2);}
+
+        @media(max-width:500px){.fields-row{grid-template-columns:1fr;}.nav{padding:0 14px;}.mode-cards{grid-template-columns:1fr;}.party-top{flex-direction:column;align-items:flex-start;}.party-actions{width:100%;}.party-input{flex:1;min-width:0;}}
+    </style>
 </head>
-<style>
-h1 {
-  text-align: center;
-  color: whitesmoke;
-  font-size: xx-large;
-}
-h2 {
-  text-align: center;
-  color: whitesmoke;
-}
-p {
-  text-align: center;
-  color: whitesmoke;
-}
-div {
-  text-align: center;
-  color: whitesmoke;
-}
-img {
-  display: block;
-  margin: auto;
-  width: 50%;
-}
-button {
-  color: rgb(143, 143, 143);
-  font-size: 20px;
-  background-color: whitesmoke;
-  border-radius: 7px;
-  padding: 10px 20px;
-  margin: 5px;
-  cursor: pointer;
-  border: none;
-  transition: 0.3s;
-}
-button:hover {
-  background-color: rgb(200, 200, 200);
-}
-#answer {
-  font-size: 18px;
-  font-weight: bold;
-  margin: 20px 0;
-  min-height: 30px;
-  color: rgb(100, 200, 100);
-}
-#score {
-  font-size: 20px;
-  font-weight: bold;
-  margin: 10px 0;
-  color: whitesmoke;
-}
-#multiplayerInfo {
-  display: none;
-  margin: 10px auto 20px;
-  padding: 10px 16px;
-  background-color: rgb(80, 80, 80);
-  border-radius: 7px;
-  max-width: 600px;
-}
-#multiplayerInfo strong {
-  color: rgb(100, 200, 100);
-}
-#multiplayerStats {
-  margin-top: 8px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 8px;
-}
-#multiplayerStats div {
-  color: whitesmoke;
-}
-#matchStatus {
-  margin-top: 8px;
-  font-weight: bold;
-  color: rgb(100, 200, 100);
-  display: none;
-}
-#matchStatus.error {
-  color: #ffb3b3;
-}
-form {
-  margin: 20px auto;
-  padding: 30px;
-  background-color: rgb(80, 80, 80);
-  border-radius: 7px;
-  display: block;
-  max-width: 600px;
-  text-align: center;
-}
-form input[type="text"], form input[type="number"] {
-  padding: 12px;
-  margin: 10px auto;
-  border-radius: 4px;
-  border: 1px solid rgb(143, 143, 143);
-  width: 100%;
-  max-width: 350px;
-  font-size: 16px;
-  box-sizing: border-box;
-}
-form input[type="submit"] {
-  background-color: whitesmoke;
-  color: rgb(143, 143, 143);
-  padding: 12px 40px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.3s;
-  font-size: 18px;
-  margin-top: 15px;
-}
-form input[type="submit"]:hover {
-  background-color: rgb(200, 200, 200);
-}
-label {
-  color: whitesmoke;
-  font-weight: bold;
-  display: block;
-  margin-top: 10px;
-  font-size: 18px;
-}
-#mapContainer {
-  width: 100%;
-  max-width: 600px;
-  height: 400px;
-  margin: 20px auto;
-  border-radius: 7px;
-  overflow: hidden;
-  border: 2px solid rgb(143, 143, 143);
-}
-#selectedCountry {
-  font-size: 16px;
-  color: rgb(100, 200, 100);
-  font-weight: bold;
-  margin-top: 10px;
-  text-align: center;
-}
-</style>
-<body style="font-family: sans-serif; background-color:rgb(61, 61, 61);">
-    <h1><b>CARGUESSER</b></h1>
-    <hr>
-    <h2>How to Play</h2>
-    <p>Every round you will be provided an image, then you will be prompted to enter its name, production year and country of origin.</p>
-    <hr>
-    
-    <div id="score">Score: 0</div>
-    <div id="multiplayerInfo">
-      <div>Multiplayer Code: <strong id="multiplayerCode"></strong></div>
-      <div id="multiplayerStats">
-        <div>Opponent Score: <strong id="opponentScoreValue">0</strong></div>
-        <div>Time Left: <strong id="matchTimerValue">02:00</strong></div>
-      </div>
-      <div id="matchStatus"></div>
-      <button onclick="copyMultiplayerCode()">Copy Code</button>
+<body>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+    <div class="loading-car">🏎️</div>
+    <div class="loading-logo">CAR<span>GUESSER</span></div>
+    <div class="loading-bar-bg"><div class="loading-bar" id="loadBar"></div></div>
+    <div class="loading-sub" id="loadSub">Loading cars…</div>
+</div>
+
+<!-- BG -->
+<div class="bg-wrap">
+    <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+    <div class="grid"></div>
+</div>
+
+<nav class="nav">
+    <a href="dashboard.html" class="nav-logo">CAR<span>GUESSER</span></a>
+    <div class="nav-center">
+        <div class="score-wrap">SCORE &nbsp;<span id="scoreVal">0</span></div>
+        <div class="streak-pill" id="streakPill">🔥 <span id="streakNum">0</span></div>
+        <div class="mode-badge" id="modeBadge"></div>
     </div>
-    
-    <button id="revealBtn" onclick="RevealCurrent()">Reveal</button>
-    <button id="skipBtn" onclick="loadRandomCar()">Skip</button>
-    <button id="hintBtn" onclick="HintCurrent()">Hint</button>
+    <a href="dashboard.html" class="home-btn">← Home</a>
+</nav>
 
-    <br><br>
+<div class="page-tabs" role="tablist" aria-label="Game sections">
+    <button class="page-tab-btn active" id="playTabBtn" onclick="switchGameTab('play')">Play</button>
+    <button class="page-tab-btn" id="partyTabBtn" onclick="switchGameTab('party')">1v1 Duel</button>
+    <button class="page-tab-btn" id="liveTabBtn" onclick="switchGameTab('live')">Live</button>
+</div>
 
-    <img id="img" src="" width="400" alt="Car Image">
 
-    <p id="answer"></p>
+<div class="wrap">
 
-    <form id="guessForm">
-      <label for="fname">Car Name:</label><br>
-      <input type="text" id="fname" name="Car Name" list="carSuggestions" required><br>
-      <datalist id="carSuggestions"></datalist>
-      <label for="lname">Production Year:</label><br>
-      <input type="number" id="lname" name="Production Year" list="yearSuggestions" min="1900" max="2100" step="1" required><br>
-      <datalist id="yearSuggestions"></datalist>
-      <label>Country of Origin (Click on map):</label>
-      <div id="mapContainer"></div>
-      <div id="selectedCountry">No country selected</div>
-      <input type="hidden" id="country" name="Country" required><br><br>
-      <input type="submit" value="Submit">
-    </form> 
+    <div id="playTabPanel" class="page-tab-panel active">
 
-<script type="module">
-import { 
-  getCurrentUser,
-  getMultiplayerGame,
-  getMultiplayerGameByCode,
-  saveGameScore,
-  updateGameScore,
-  subscribeToGameUpdates,
-  finishMultiplayerGame
-} from './supabase-config.js?v=20260521-2';
+    <!-- MODE SELECT -->
+    <div id="modeSelect">
+        <div class="mode-title">Choose Your Mode</div>
+        <div class="mode-sub">Pick how you want to race today</div>
+        <div class="mode-cards">
 
-const MATCH_DURATION_SECONDS = 120;
-const LOBBY_REDIRECT_DELAY_MS = 4000;
+            <div class="mode-card classic-card" onclick="startMode('classic')">
+                <div class="mode-icon">🏁</div>
+                <div class="mode-info">
+                    <div class="mode-name">Classic</div>
+                    <div class="mode-desc">Guess the car name, production year, and country of origin. The full experience.</div>
+                    <div class="mode-tag">All-rounder</div>
+                </div>
+                <div class="mode-arrow">→</div>
+            </div>
 
+            <div class="mode-card reveal-card" onclick="startMode('reveal')">
+                <div class="mode-icon">🔍</div>
+                <div class="mode-info">
+                    <div class="mode-name">Reveal Rush</div>
+                    <div class="mode-desc">The image starts blurred. Every 5 seconds it reveals more. Guess fast for more points!</div>
+                    <div class="mode-tag">⚡ Speedrun</div>
+                </div>
+                <div class="mode-arrow">→</div>
+            </div>
+
+            <div class="mode-card price-card" onclick="startMode('price')">
+                <div class="mode-icon">💰</div>
+                <div class="mode-info">
+                    <div class="mode-name">Price Guesser</div>
+                    <div class="mode-desc">See the car, use the slider to guess its price. Closest guess wins the most points!</div>
+                    <div class="mode-tag">💸 High Stakes</div>
+                </div>
+                <div class="mode-arrow">→</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- CLASSIC MODE -->
+    <div id="classicScreen" class="game-screen">
+        <button class="back-btn" onclick="goBack()">← Change Mode</button>
+        <div class="round-bar"><span>Round <span class="round-num" id="classicRound">1</span></span><span style="font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,136,255,0.7)">🏁 CLASSIC</span></div>
+        <div class="car-card" id="carCardClassic">
+            <div class="car-top-bar"></div>
+            <div class="car-img-wrap">
+                <div class="skeleton" id="skeletonClassic"></div>
+                <div class="no-img" id="noImgClassic"><div class="icon">🏎️</div><div>Run: npx serve .</div></div>
+                <img id="img" src="" alt="" />
+                <div class="correct-flash" id="correctFlashClassic"></div>
+            </div>
+        </div>
+        <div class="action-row">
+            <button class="btn btn-hint" onclick="HintCurrent('classic')">💡 Hint</button>
+            <button class="btn" onclick="RevealCurrent('classic')">👁 Reveal</button>
+            <button class="btn" onclick="skipCar('classic')">⏭ Skip</button>
+        </div>
+        <div class="feedback" id="feedbackClassic"></div>
+        <div class="guess-card">
+            <div class="section-label">Your Guess</div>
+            <div class="fields-row">
+                <div class="field-group">
+                    <label class="field-label">Car Name</label>
+                    <input class="field-input" type="text" id="fnameClassic" list="carSuggestionsClassic" placeholder="e.g. Ferrari F40" autocomplete="off" />
+                    <datalist id="carSuggestionsClassic"></datalist>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Year</label>
+                    <input class="field-input" type="number" id="yearClassic" min="1886" max="2025" placeholder="e.g. 1995" />
+                </div>
+            </div>
+            <div class="map-label">Country of Origin — click a highlighted country</div>
+            <div id="mapContainerClassic"></div>
+            <select class="field-input country-fallback" id="countryFallbackClassic">
+                <option value="">Or select country from list</option>
+            </select>
+            <div class="selected-country" id="selectedCountryClassic">No country selected</div>
+            <input type="hidden" id="countryClassic" />
+            <button class="submit-btn" onclick="submitGuess('classic')">Submit Guess →</button>
+        </div>
+    </div>
+
+    <!-- REVEAL RUSH MODE -->
+    <div id="revealScreen" class="game-screen">
+        <button class="back-btn" onclick="goBack()">← Change Mode</button>
+        <div class="round-bar"><span>Round <span class="round-num" id="revealRound">1</span></span><span style="font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(232,0,29,0.7)">🔍 REVEAL RUSH</span></div>
+        <div class="car-card" id="carCardReveal">
+            <div class="car-top-bar"></div>
+            <div class="car-img-wrap">
+                <div class="skeleton" id="skeletonReveal"></div>
+                <div class="no-img" id="noImgReveal"><div class="icon">🔍</div><div>Run: npx serve .</div></div>
+                <img id="imgReveal" src="" alt="" />
+                <div class="reveal-overlay" id="revealOverlay"></div>
+                <div class="reveal-timer" id="revealTimerWrap">
+                    <svg width="56" height="56"><circle cx="28" cy="28" r="25"/><circle class="progress" id="timerProgress" cx="28" cy="28" r="25"/></svg>
+                    <div class="reveal-timer-num" id="timerNum">8</div>
+                </div>
+                <div class="reveal-stage" id="revealStage">Stage 1 of 4</div>
+                <div class="correct-flash" id="correctFlashReveal"></div>
+            </div>
+        </div>
+        <div class="feedback" id="feedbackReveal"></div>
+        <div class="guess-card">
+            <div class="section-label">Guess the Car Name</div>
+            <div class="field-group" style="margin-bottom:16px">
+                <label class="field-label">Car Name</label>
+                <input class="field-input" type="text" id="fnameReveal" list="carSuggestionsReveal" placeholder="e.g. Ferrari F40" autocomplete="off" />
+                <datalist id="carSuggestionsReveal"></datalist>
+            </div>
+            <button class="submit-btn" onclick="submitGuess('reveal')" style="background:var(--red)">Submit Guess →</button>
+        </div>
+    </div>
+
+    <!-- PRICE GUESSER MODE -->
+    <div id="priceScreen" class="game-screen">
+        <button class="back-btn" onclick="goBack()">← Change Mode</button>
+        <div class="round-bar"><span>Round <span class="round-num" id="priceRound">1</span></span><span style="font-family:'Barlow Condensed';font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,212,106,0.7)">💰 PRICE GUESSER</span></div>
+        <div class="car-card" id="carCardPrice">
+            <div class="car-top-bar" style="background:linear-gradient(90deg,transparent,var(--green) 30%,#00ff88 60%,transparent)"></div>
+            <div class="car-img-wrap">
+                <div class="skeleton" id="skeletonPrice"></div>
+                <div class="no-img" id="noImgPrice"><div class="icon">💰</div><div>Run: npx serve .</div></div>
+                <img id="imgPrice" src="" alt="" />
+                <div class="correct-flash" id="correctFlashPrice"></div>
+            </div>
+        </div>
+        <div class="feedback" id="feedbackPrice"></div>
+        <div class="guess-card">
+            <div class="section-label">What's This Car Worth?</div>
+            <div class="price-section">
+                <div class="price-display">$<span id="priceDisplay">50,000</span></div>
+                <input type="range" class="price-slider" id="priceSlider" min="5000" max="5000000" step="1000" value="50000" oninput="updatePriceDisplay()" />
+                <div class="price-range-labels"><span>$5,000</span><span>$5,000,000</span></div>
+                <div class="price-precise-row">
+                    <div class="field-group" style="margin:0">
+                        <label class="field-label" for="priceInputExact">Exact Price Guess</label>
+                        <input class="field-input price-exact-input" type="number" id="priceInputExact" min="5000" max="5000000" step="1000" value="50000" oninput="updatePriceFromInput()" />
+                    </div>
+                    <button class="price-nudge-btn" type="button" onclick="nudgePrice(-10000)">-10k</button>
+                    <button class="price-nudge-btn" type="button" onclick="nudgePrice(10000)">+10k</button>
+                </div>
+            </div>
+            <div id="priceResultSection" style="display:none" class="price-result">
+                <div class="price-actual" id="priceActual"></div>
+                <div class="price-diff" id="priceDiff"></div>
+            </div>
+            <button class="submit-btn green" id="priceSubmitBtn" onclick="submitGuess('price')">Lock In Price →</button>
+        </div>
+    </div>
+
+    </div>
+
+    <div id="partyTabPanel" class="page-tab-panel">
+        <div class="party-panel" id="partyPanel">
+            <div class="party-top">
+                <div>
+                    <div class="party-title">1v1 Duel</div>
+                    <div class="party-status" id="partyStatus"></div>
+                </div>
+                <div class="party-code" id="partyCodeDisplay"></div>
+            </div>
+            <div class="party-actions" id="partyActions">
+                <button class="party-btn" id="createPartyBtn" onclick="createParty()">Create Duel</button>
+                <input class="party-input" id="joinPartyCode" type="text" maxlength="6" placeholder="ENTER CODE" />
+                <button class="party-btn" id="joinPartyBtn" onclick="joinPartyByCode()">Join Duel</button>
+                <button class="party-btn party-hidden" id="leavePartyBtn" onclick="leaveParty()">Leave Duel</button>
+            </div>
+            <div class="party-scoreboard" id="partyScoreboard">
+                <div class="party-score-card party-score-you">
+                    <div class="party-score-name">You</div>
+                    <div class="party-score-val" id="partyYouScore">0</div>
+                </div>
+                <div class="party-score-card party-score-opp">
+                    <div class="party-score-name" id="partyOppLabel">Opponent</div>
+                    <div class="party-score-val" id="partyOppScore">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="liveTabPanel" class="page-tab-panel">
+        <div class="party-panel">
+            <div class="party-top">
+                <div>
+                    <div class="party-title">Live Players</div>
+                    <div class="party-status" style="display:block">Players currently in waiting or active duel rooms.</div>
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+                <div class="party-score-card">
+                    <div class="party-score-name">Live rooms</div>
+                    <div class="party-score-val" id="liveRoomsCount">0</div>
+                </div>
+                <div class="party-score-card">
+                    <div class="party-score-name">Players in rooms</div>
+                    <div class="party-score-val" id="livePlayersCount">0</div>
+                </div>
+            </div>
+            <div class="live-list" id="livePlayersList" style="margin-top:10px;">
+                <div class="live-empty">Loading live players...</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.5/dist/umd/supabase.js"></script>
+<script>
+// ── CAR DATABASE ──
 const cars = [
-  { image: "ScriptMats/photos/1.jpeg", name: "Porsche", year: 2020, country: "Germany" },
-  { image: "ScriptMats/photos/2.jpeg", name: "Toyota Corolla", year: 2019, country: "Japan" },
-  { image: "ScriptMats/photos/3.jpeg", name: "Fiat Punto", year: 2015, country: "Italy" },
-  { image: "ScriptMats/photos/4.jpeg", name: "Ferrari SF90 Stradale", year: 2019, country: "Italy" },
-  { image: "ScriptMats/photos/5.jpeg", name: "Fiat Multipla", year: 1998, country: "Italy" },
-  { image: "ScriptMats/photos/6.jpeg", name: "BMW M5", year: 2021, country: "Germany" },
-  { image: "ScriptMats/photos/7.jpeg", name: "Lightning McQueen", year: 2006, country: "United States of America" },
-  { image: "ScriptMats/photos/8.jpeg", name: "Mercedes Benz Clase G", year: 1979, country: "Austria" },
-  { image: "ScriptMats/photos/9.jpeg", name: "Toyota Prius", year: 1979, country: "Japan" },
-  { image: "ScriptMats/photos/10.jpeg", name: "Vintage Ford Model A", year: 1928, country: "United States of America" },
-  { image: "ScriptMats/photos/11.jpeg", name: "Packard Twelve 1108 Sport Sedan", year: 1934, country: "United States of America" },
-  { image: "ScriptMats/photos/12.jpeg", name: "Pierce-Arrow Silver Arrow", year: 1933, country: "United States of America" },
-  { image: "ScriptMats/photos/13.jpeg", name: "Duesenberg Model SSJ", year: 1935, country: "United States of America" },
-  { image: "ScriptMats/photos/14.jpeg", name: "Benz Patent Motorwagen", year: 1886, country: "Germany" },
-  { image: "ScriptMats/photos/15.jpeg", name: "Maserati 250F", year: 1954, country: "Italy" },
-  { image: "ScriptMats/photos/16.jpeg", name: "Mercedes-Benz 300SLR", year: 1995, country: "Germany" }
+    // Budget / Common
+    { image:"ScriptMats/photos/2.jpeg",  name:"Toyota Corolla", year:2019, country:"Japan", price:22000, category:"budget" },
+    { image:"ScriptMats/photos/3.jpeg",  name:"Fiat Punto", year:2015, country:"Italy", price:8500, category:"budget" },
+    { image:"ScriptMats/photos/5.jpeg",  name:"Fiat Multipla", year:1998, country:"Italy", price:3000, category:"budget" },
+    { image:"ScriptMats/photos/9.jpeg",  name:"Toyota Prius", year:1997, country:"Japan", price:25000, category:"budget" },
+    { image:"ScriptMats/photos/17.jpeg", name:"Volkswagen Golf", year:2018, country:"Germany", price:24000, category:"budget" },
+    { image:"ScriptMats/photos/18.jpeg", name:"Ford Focus", year:2017, country:"United States of America", price:19000, category:"budget" },
+    { image:"ScriptMats/photos/19.jpeg", name:"Honda Civic", year:2020, country:"Japan", price:23000, category:"budget" },
+    { image:"ScriptMats/photos/20.jpeg", name:"Renault Clio", year:2019, country:"France", price:16000, category:"budget" },
+    { image:"ScriptMats/photos/21.jpeg", name:"Peugeot 208", year:2020, country:"France", price:17500, category:"budget" },
+    // Mid range
+    { image:"ScriptMats/photos/1.jpeg",  name:"Porsche 911", year:2020, country:"Germany", price:115000, category:"mid" },
+    { image:"ScriptMats/photos/6.jpeg",  name:"BMW M5", year:2021, country:"Germany", price:105000, category:"mid" },
+    { image:"ScriptMats/photos/8.jpeg",  name:"Mercedes Benz G Class", year:1979, country:"Austria", price:145000, category:"mid" },
+    // Luxury / Exotic
+    { image:"ScriptMats/photos/4.jpeg",  name:"Ferrari SF90 Stradale", year:2019, country:"Italy", price:625000, category:"luxury" },
+    { image:"ScriptMats/photos/15.jpeg", name:"Maserati 250F", year:1954, country:"Italy", price:2800000, category:"luxury" },
+    { image:"ScriptMats/photos/16.jpeg", name:"Mercedes-Benz 300SLR", year:1955, country:"Germany", price:143000000, category:"luxury" },
+    // Classic / Vintage
+    { image:"ScriptMats/photos/10.jpeg", name:"Ford Model A", year:1928, country:"United States of America", price:28000, category:"classic" },
+    { image:"ScriptMats/photos/11.jpeg", name:"Packard Twelve 1108 Sport Sedan", year:1934, country:"United States of America", price:185000, category:"classic" },
+    { image:"ScriptMats/photos/12.jpeg", name:"Pierce-Arrow Silver Arrow", year:1933, country:"United States of America", price:350000, category:"classic" },
+    { image:"ScriptMats/photos/13.jpeg", name:"Duesenberg Model SSJ", year:1935, country:"United States of America", price:22000000, category:"classic" },
+    { image:"ScriptMats/photos/14.jpeg", name:"Benz Patent Motorwagen", year:1886, country:"Germany", price:1800000, category:"classic" },
+    // Fun
+    { image:"ScriptMats/photos/7.jpeg",  name:"Lightning McQueen", year:2006, country:"United States of America", price:999999, category:"fun" },
+    // New additions
+    { image:"ScriptMats/photos/22.jpeg", name:"Nissan GT-R", year:2016, country:"Japan", price:90000, category:"mid" },
+    { image:"ScriptMats/photos/23.jpeg", name:"Alfa Romeo Giulia", year:2018, country:"Italy", price:43000, category:"mid" },
+    { image:"ScriptMats/photos/24.jpeg", name:"Suzuki Swift", year:2021, country:"Japan", price:20000, category:"budget" },
+    { image:"ScriptMats/photos/25.jpeg", name:"Skoda Octavia", year:2019, country:"Czech Republic", price:28000, category:"budget" },
+    { image:"ScriptMats/photos/26.jpeg", name:"Mini Cooper S", year:2017, country:"United Kingdom", price:32000, category:"mid" },
+    { image:"ScriptMats/photos/27.jpeg", name:"Cadillac CT5", year:2020, country:"United States of America", price:46000, category:"mid" },
+    { image:"ScriptMats/photos/28.jpeg", name:"Aston Martin DB11", year:2019, country:"United Kingdom", price:205000, category:"luxury" },
+    { image:"ScriptMats/photos/29.jpeg", name:"Lexus LC 500", year:2020, country:"Japan", price:98000, category:"luxury" },
+    { image:"ScriptMats/photos/30.jpeg", name:"Citroen DS", year:1965, country:"France", price:62000, category:"classic" },
+    { image:"ScriptMats/photos/31.jpeg", name:"Jaguar E-Type", year:1968, country:"United Kingdom", price:210000, category:"classic" },
 ];
 
+let score = 0, streak = 0;
+let currentMode = null;
 let currentCar = null;
-let score = 0;
-let map = null;
-let geoJsonLayer = null;
-let countriesWithCars = [];
-let multiplayerContext = null;
-let multiplayerGame = null;
-let localPlayerNumber = null;
-let opponentScore = 0;
-let matchEnded = false;
-let timerInterval = null;
-let matchEndTime = null;
-let currentUser = null;
-let gameSubscription = null;
-let gamePollingInterval = null;
+let usedIndices = [];
+let revealInterval = null, revealStage = 0, revealTimer = 0;
+let maps = {};
+let round = { classic:1, reveal:1, price:1 };
+let modeSessionScores = { classic:0, reveal:0, price:0 };
+const TARGET_MULTIPLAYER_SCORE = 15;
+const REVEAL_STAGE_SECONDS = 8;
+
+const { createClient } = supabase;
+const SUPABASE_URL = 'https://qauvcttdkbdpnhpcjdog.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_BAliVVfUjkf3zZarqfRTPA_eSRTnEFk';
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const multiplayer = {
+    enabled: false,
+    gameId: null,
+    gameCode: '',
+    role: '',
+    myUserId: null,
+    opponentJoined: false,
+    channel: null,
+    lastSyncedScore: 0
+};
+let authBootstrapPromise = null;
 let lobbyRedirectTimeout = null;
 
-function loadMultiplayerContext() {
-  const params = new URLSearchParams(window.location.search);
-  const gameId = params.get('gameId') || sessionStorage.getItem('multiplayerGameId');
-  const gameCode = params.get('gameCode') || sessionStorage.getItem('multiplayerGameCode');
-  const role = params.get('role') || sessionStorage.getItem('multiplayerRole');
-
-  if (gameId) sessionStorage.setItem('multiplayerGameId', gameId);
-  if (gameCode) sessionStorage.setItem('multiplayerGameCode', gameCode);
-  if (role) sessionStorage.setItem('multiplayerRole', role);
-
-  if (gameId || gameCode) {
-    multiplayerContext = { gameId, gameCode, role };
-    if (gameCode) {
-      document.getElementById('multiplayerCode').textContent = gameCode;
-      document.getElementById('multiplayerInfo').style.display = 'block';
-    }
-  }
-}
-
-function copyMultiplayerCode() {
-  if (!multiplayerContext?.gameCode) {
-    alert('No multiplayer code available.');
-    return;
-  }
-  navigator.clipboard.writeText(multiplayerContext.gameCode);
-  alert('Game code copied to clipboard!');
-}
-
-function determineLocalPlayerNumber(game) {
-  if (multiplayerContext?.role === 'host') {
-    if (!game?.player_1_id || !currentUser?.id || game.player_1_id === currentUser.id) {
-      return 1;
-    }
-  }
-  if (multiplayerContext?.role === 'guest') {
-    if (!game?.player_2_id || !currentUser?.id || game.player_2_id === currentUser.id) {
-      return 2;
-    }
-  }
-  if (currentUser?.id && game) {
-    if (game.player_1_id === currentUser.id) return 1;
-    if (game.player_2_id === currentUser.id) return 2;
-  }
-  return null;
-}
-
-function setMatchStatus(message, isError = false) {
-  const status = document.getElementById('matchStatus');
-  if (!status) return;
-  if (!message) {
-    status.textContent = '';
-    status.style.display = 'none';
-    status.className = '';
-    return;
-  }
-  status.textContent = message;
-  status.style.display = 'block';
-  status.className = isError ? 'error' : '';
-}
-
-function setGameplayEnabled(enabled) {
-  const form = document.getElementById("guessForm");
-  if (form) {
-    Array.from(form.elements).forEach(element => {
-      element.disabled = !enabled;
-    });
-  }
-  const revealBtn = document.getElementById("revealBtn");
-  const skipBtn = document.getElementById("skipBtn");
-  const hintBtn = document.getElementById("hintBtn");
-  [revealBtn, skipBtn, hintBtn].forEach(button => {
-    if (button) button.disabled = !enabled;
-  });
-}
-
-function initializeMap() {
-  // Get list of countries that have cars
-  countriesWithCars = [...new Set(cars.map(car => car.country))];
-  
-  map = L.map('mapContainer').setView([20, 0], 2);
-  
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 19
-  }).addTo(map);
-  
-  fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to load countries data');
-      return response.json();
-    })
-    .then(data => {
-      geoJsonLayer = L.geoJson(data, {
-        style: function(feature) {
-          const countryName = feature.properties.name;
-          const hasCarFromCountry = countriesWithCars.includes(countryName);
-          
-          return {
-            color: hasCarFromCountry ? 'rgb(50, 200, 80)' : 'rgb(100, 100, 100)',
-            weight: hasCarFromCountry ? 2 : 1,
-            opacity: hasCarFromCountry ? 1 : 0.4,
-            fillOpacity: hasCarFromCountry ? 0.7 : 0.2,
-            fillColor: hasCarFromCountry ? 'rgb(50, 200, 80)' : 'rgb(80, 80, 80)'
-          };
-        },
-        onEachFeature: function(feature, layer) {
-          const countryName = feature.properties.name;
-          const hasCarFromCountry = countriesWithCars.includes(countryName);
-          
-          if (hasCarFromCountry) {
-            layer.on('click', function() {
-              selectCountry(countryName);
-            });
-            layer.on('mouseover', function() {
-              layer.setStyle({ fillOpacity: 0.8, weight: 3 });
-            });
-            layer.on('mouseout', function() {
-              layer.setStyle({ fillOpacity: 0.5, weight: 2 });
-            });
-          }
-        }
-      }).addTo(map);
-    })
-    .catch(error => {
-      console.error('Error loading map:', error);
-      document.getElementById('mapContainer').innerHTML = '<p style="padding: 20px; color: red;">Error loading map. Please refresh the page.</p>';
-    });
-}
-
-function selectCountry(countryName) {
-  document.getElementById('country').value = countryName;
-  document.getElementById('selectedCountry').textContent = 'Selected: ' + countryName;
-}
-
-function loadRandomCar() {
-  const index = Math.floor(Math.random() * cars.length);
-  currentCar = cars[index];
-
-  const imgElement = document.getElementById("img");
-  imgElement.src = currentCar.image;
-  
-  // Add error handling for image loading
-  imgElement.onerror = function() {
-    document.getElementById("answer").textContent = "⚠️ Image failed to load. Please skip to next car.";
-    currentCar = null;
-  };
-  
-  imgElement.onload = function() {
-    document.getElementById("answer").textContent = "";
-  };
-  
-  document.getElementById("guessForm").reset();
-  document.getElementById("selectedCountry").textContent = "No country selected";
-}
-
-function RevealCurrent() {
-  if (currentCar !== null) {
-    document.getElementById("answer").textContent =
-      "Car Name: " + currentCar.name + " | Year: " + currentCar.year + " | Country: " + currentCar.country;
-    
-    // Auto-fill the form fields
-    document.getElementById("fname").value = currentCar.name;
-    document.getElementById("lname").value = currentCar.year;
-    document.getElementById("country").value = currentCar.country;
-    document.getElementById("selectedCountry").textContent = "Selected: " + currentCar.country;
-  }
-}
-
-function HintCurrent() {
-  if (currentCar !== null) {
-    const carName = currentCar.name;
-    const yearDecade = Math.floor(currentCar.year / 10) * 10;
-    const letterCount = carName.length;
-    const firstLetter = carName.charAt(0);
-    const wordCount = carName.split(' ').length;
-    
-    // Show number of letters and first letter
-    let hint = `🚗 Car: ${letterCount} letters, starts with '${firstLetter}'`;
-    
-    // Add word count if multi-word
-    if (wordCount > 1) {
-      hint += ` (${wordCount} words)`;
-    }
-    
-    // Show decade instead of exact year
-    hint += ` | 📅 From the ${yearDecade}s`;
-    
-    document.getElementById("answer").textContent = "Hint: " + hint;
-  }
-}
-
-function updateScore() {
-  document.getElementById("score").textContent = "Score: " + score;
-}
-
-function updateOpponentScoreDisplay() {
-  const opponentScoreElement = document.getElementById("opponentScoreValue");
-  if (!opponentScoreElement) return;
-  if (!multiplayerContext?.gameId) return;
-  if (!multiplayerGame?.player_2_id && localPlayerNumber === 1) {
-    opponentScoreElement.textContent = '—';
-    return;
-  }
-  opponentScoreElement.textContent = opponentScore;
-}
-
-function syncScoresFromGame(game) {
-  if (!game) return;
-  const player1Score = Number.isFinite(game.player_1_score) ? game.player_1_score : 0;
-  const player2Score = Number.isFinite(game.player_2_score) ? game.player_2_score : 0;
-
-  if (localPlayerNumber === 1) {
-    opponentScore = player2Score;
-    if (score !== player1Score) {
-      score = player1Score;
-      updateScore();
-    }
-  } else if (localPlayerNumber === 2) {
-    opponentScore = player1Score;
-    if (score !== player2Score) {
-      score = player2Score;
-      updateScore();
-    }
-  }
-
-  updateOpponentScoreDisplay();
-}
-
-function formatTime(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
-
-function updateTimerDisplay() {
-  const timerElement = document.getElementById('matchTimerValue');
-  if (!timerElement) return;
-  if (!matchEndTime) {
-    timerElement.textContent = '—:—';
-    return;
-  }
-  const remainingSeconds = Math.max(0, Math.ceil((matchEndTime - Date.now()) / 1000));
-  timerElement.textContent = formatTime(remainingSeconds);
-  if (remainingSeconds <= 0) {
-    handleTimerExpired();
-  }
-}
-
-function clearMatchTimer() {
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-}
-
-function stopGamePolling() {
-  if (gamePollingInterval) {
-    clearInterval(gamePollingInterval);
-    gamePollingInterval = null;
-  }
-}
-
 function scheduleLobbyRedirect() {
-  if (lobbyRedirectTimeout) return;
-  lobbyRedirectTimeout = setTimeout(() => {
-    window.location.href = 'dashboard.html';
-  }, LOBBY_REDIRECT_DELAY_MS);
+    if (lobbyRedirectTimeout) return;
+    lobbyRedirectTimeout = setTimeout(() => {
+        window.location.href = 'dashboard.html';
+    }, 4000);
 }
 
-async function awardWinnerPoint(game) {
-  if (!game?.winner_id || !currentUser?.id) return;
-  if (game.winner_id !== currentUser.id) return;
-  const storageKey = `multiplayerWinRecorded-${game.id}`;
-  if (sessionStorage.getItem(storageKey)) return;
-
-  const result = await saveGameScore(currentUser.id, 1, 1, 'multiplayer');
-  if (!result.success) {
-    console.error('Save multiplayer win error:', result.error);
-    return;
-  }
-
-  sessionStorage.setItem(storageKey, 'true');
-}
-
-function startGamePolling() {
-  if (gamePollingInterval) return;
-  gamePollingInterval = setInterval(async () => {
-    if (!multiplayerContext?.gameId || matchEnded) return;
-    const gameResult = await getMultiplayerGame(multiplayerContext.gameId);
-    if (gameResult.success && gameResult.data) {
-      updateMultiplayerState(gameResult.data);
-    }
-  }, 3000);
-}
-
-function startMatchTimerIfActive(game) {
-  if (matchEnded || timerInterval) return;
-  if (!game || game.status !== 'active') {
-    updateTimerDisplay();
-    return;
-  }
-  const storageKey = `multiplayerStart-${game.id}`;
-  let startTime = sessionStorage.getItem(storageKey);
-  if (!startTime) {
-    startTime = new Date().toISOString();
-    sessionStorage.setItem(storageKey, startTime);
-  }
-  matchEndTime = new Date(startTime).getTime() + MATCH_DURATION_SECONDS * 1000;
-  updateTimerDisplay();
-  timerInterval = setInterval(updateTimerDisplay, 1000);
-}
-
-function buildMatchResultMessage(game) {
-  if (!game || !localPlayerNumber) {
-    return 'Match over.';
-  }
-  const player1Score = Number.isFinite(game.player_1_score) ? game.player_1_score : 0;
-  const player2Score = Number.isFinite(game.player_2_score) ? game.player_2_score : 0;
-  if (player1Score === player2Score) {
-    return `Match over — tie (${player1Score}-${player2Score}).`;
-  }
-  const localScore = localPlayerNumber === 1 ? player1Score : player2Score;
-  const opponentFinalScore = localPlayerNumber === 1 ? player2Score : player1Score;
-  if (localScore > opponentFinalScore) {
-    return `Match over — you win (${localScore}-${opponentFinalScore}).`;
-  }
-  return `Match over — opponent wins (${localScore}-${opponentFinalScore}).`;
-}
-
-function determineWinnerId() {
-  if (!multiplayerGame) return null;
-  const player1Score = localPlayerNumber === 1 ? score : opponentScore;
-  const player2Score = localPlayerNumber === 2 ? score : opponentScore;
-  if (player1Score === player2Score) return null;
-  return player1Score > player2Score ? multiplayerGame.player_1_id : multiplayerGame.player_2_id;
-}
-
-async function finalizeMatchOnServer() {
-  if (!multiplayerGame?.id || multiplayerGame.status === 'finished') return;
-  const winnerId = determineWinnerId();
-  const result = await finishMultiplayerGame(multiplayerGame.id, winnerId);
-  if (!result.success) {
-    console.error('Finish match error:', result.error);
-    setMatchStatus('Time is up, but we could not finalize the match. Please refresh.', true);
-    return;
-  }
-  if (result.data) {
-    awardWinnerPoint(result.data);
-  }
-}
-
-function endMatch(message) {
-  if (matchEnded) return;
-  matchEnded = true;
-  clearMatchTimer();
-  stopGamePolling();
-  matchEndTime = Date.now();
-  updateTimerDisplay();
-  setGameplayEnabled(false);
-  const baseMessage = message || 'Match over.';
-  const finalMessage = multiplayerContext?.gameId
-    ? `${baseMessage} Returning to lobby...`
-    : baseMessage;
-  setMatchStatus(finalMessage);
-  if (multiplayerContext?.gameId) {
-    scheduleLobbyRedirect();
-  }
-}
-
-function updateMultiplayerState(game) {
-  multiplayerGame = game;
-  syncScoresFromGame(game);
-
-  if (game.status === 'waiting') {
-    if (!matchEnded) {
-      setGameplayEnabled(false);
-      clearMatchTimer();
-      matchEndTime = null;
-      updateTimerDisplay();
-      setMatchStatus('Waiting for opponent to join...');
-    }
-    return;
-  }
-
-  if (game.status === 'active') {
-    if (!matchEnded) {
-      setGameplayEnabled(true);
-      setMatchStatus('');
-      startMatchTimerIfActive(game);
-    }
-    return;
-  }
-
-  if (game.status === 'finished') {
-    endMatch(buildMatchResultMessage(game));
-    awardWinnerPoint(game);
-  }
-}
-
-async function initializeMultiplayer() {
-  if (!multiplayerContext?.gameId && !multiplayerContext?.gameCode) return;
-  currentUser = await getCurrentUser();
-  if (!currentUser) {
-    setGameplayEnabled(false);
-    setMatchStatus('Please sign in from the dashboard to join multiplayer.', true);
-    return;
-  }
-
-  let gameResult;
-  if (multiplayerContext?.gameId) {
-    gameResult = await getMultiplayerGame(multiplayerContext.gameId);
-  } else {
-    gameResult = await getMultiplayerGameByCode(multiplayerContext.gameCode);
-  }
-  if (!gameResult.success || !gameResult.data) {
-    setGameplayEnabled(false);
-    setMatchStatus('Unable to load match data. Please refresh.', true);
-    return;
-  }
-
-  if (!multiplayerContext?.gameId) {
-    multiplayerContext.gameId = gameResult.data.id;
-    sessionStorage.setItem('multiplayerGameId', gameResult.data.id);
-  }
-  if (!multiplayerContext?.gameCode && gameResult.data.game_code) {
-    multiplayerContext.gameCode = gameResult.data.game_code;
-    sessionStorage.setItem('multiplayerGameCode', gameResult.data.game_code);
-    document.getElementById('multiplayerCode').textContent = gameResult.data.game_code;
-    document.getElementById('multiplayerInfo').style.display = 'block';
-  }
-
-  localPlayerNumber = determineLocalPlayerNumber(gameResult.data);
-  if (!localPlayerNumber) {
-    setGameplayEnabled(false);
-    setMatchStatus('Unable to determine your player role. Please rejoin from the dashboard.', true);
-    return;
-  }
-
-  updateMultiplayerState(gameResult.data);
-
-  gameSubscription = subscribeToGameUpdates(multiplayerContext.gameId, payload => {
-    if (payload?.new) {
-      updateMultiplayerState(payload.new);
-    }
-  });
-  startGamePolling();
-}
-
-async function syncScoreToServer() {
-  if (!multiplayerContext?.gameId || !localPlayerNumber || matchEnded) return;
-  const result = await updateGameScore(multiplayerContext.gameId, localPlayerNumber, score);
-  if (!result.success) {
-    console.error('Sync score error:', result.error);
-    setMatchStatus('Score sync failed. Check your connection.', true);
-  }
-}
-
-function displayCarNames() {
-  const carDatalist = document.getElementById("carSuggestions");
-  const yearDatalist = document.getElementById("yearSuggestions");
-  
-  carDatalist.innerHTML = "";
-  yearDatalist.innerHTML = "";
-  
-  // Get unique years
-  const uniqueYears = [...new Set(cars.map(car => car.year))].sort((a, b) => a - b);
-  
-  // Populate car names
-  cars.forEach(car => {
-    const option = document.createElement("option");
-    option.value = car.name;
-    carDatalist.appendChild(option);
-  });
-  
-  // Populate years
-  uniqueYears.forEach(year => {
-    const option = document.createElement("option");
-    option.value = year;
-    yearDatalist.appendChild(option);
-  });
-}
-
-window.onload = function() {
-  loadMultiplayerContext();
-  loadRandomCar();
-  updateScore();
-  displayCarNames();
-  initializeMap();
-  if (multiplayerContext?.gameId) {
-    initializeMultiplayer();
-  } else {
-    setGameplayEnabled(true);
-  }
-};
-
-document.getElementById("guessForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
-
-  const guess = document.getElementById("fname").value.trim().toLowerCase();
-  const year = parseInt(document.getElementById("lname").value);
-  const country = document.getElementById("country").value.trim().toLowerCase();
-
-  if (!currentCar) return;
-  if (matchEnded) {
-    setMatchStatus('Match is over.');
-    return;
-  }
-  if (multiplayerContext?.gameId && multiplayerGame?.status !== 'active') {
-    setMatchStatus('Waiting for opponent to join...');
-    return;
-  }
-
-  // Validate country is selected
-  if (!country) {
-    document.getElementById("answer").textContent = "✗ Please select a country from the map.";
-    return;
-  }
-
-  if (guess === currentCar.name.toLowerCase() &&
-      year === currentCar.year &&
-      country === currentCar.country.toLowerCase()) {
-    score++;
-    updateScore();
-    await syncScoreToServer();
-    document.getElementById("answer").textContent = "✓ Correct! Moving to next car...";
-    setTimeout(function() {
-      loadRandomCar();
-      document.getElementById("img").scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 1500);
-  } else {
-    let feedback = "✗ Incorrect. ";
-    if (guess !== currentCar.name.toLowerCase()) {
-      feedback += "Car name is wrong. ";
-    }
-    if (year !== currentCar.year) {
-      feedback += "Year is wrong. ";
-    }
-    if (country !== currentCar.country.toLowerCase()) {
-      feedback += "Country is wrong. ";
-    }
-    document.getElementById("answer").textContent = feedback + "Try again.";
-  }
+// ── LOADING ──
+window.addEventListener('load', () => {
+    const bar = document.getElementById('loadBar');
+    const sub = document.getElementById('loadSub');
+    const msgs = ['Loading cars…','Revving engines…','Polishing chrome…','Ready to race!'];
+    let w = 0, msgIdx = 0;
+    const iv = setInterval(() => {
+        w = Math.min(w + Math.random()*12, 95);
+        bar.style.width = w + '%';
+        if (w > 30 && msgIdx === 0) { sub.textContent = msgs[1]; msgIdx++; }
+        if (w > 60 && msgIdx === 1) { sub.textContent = msgs[2]; msgIdx++; }
+        if (w > 85 && msgIdx === 2) { sub.textContent = msgs[3]; msgIdx++; }
+    }, 100);
+    setTimeout(() => {
+        clearInterval(iv);
+        bar.style.width = '100%';
+        setTimeout(() => { document.getElementById('loadingScreen').classList.add('done'); }, 500);
+    }, 2000);
+    setupAutocomplete();
+    setupCountryFallback();
+    // If the page was opened from a Supabase magic link, parse the URL fragment
+    // and establish the session so the app recognizes the signed-in user immediately.
+    (async () => {
+        try {
+            if (window.location.hash && window.location.hash.includes('access_token')) {
+                const parsed = await supabaseClient.auth.getSessionFromUrl({ storeSession: true });
+                console.log('Processed magic link session:', parsed);
+                // Remove sensitive tokens from URL to keep UI clean
+                try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) { /* ignore */ }
+            }
+        } catch (e) {
+            console.warn('Error processing magic link from URL:', e?.message || e);
+        } finally {
+            bootstrapAuthState();
+        }
+    })();
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (session?.user?.id) {
+            multiplayer.myUserId = session.user.id;
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+                const statusEl = document.getElementById('partyStatus');
+                if (statusEl && !statusEl.textContent) {
+                    statusEl.textContent = 'Signed in. You can create or join a duel.';
+                    statusEl.classList.add('show');
+                }
+            }
+        }
+    });
+    initMultiplayerFromUrlOrSession();
 });
 
-function handleTimerExpired() {
-  if (matchEnded) return;
-  endMatch('Time is up!');
-  finalizeMatchOnServer();
+// ── MODE ──
+function startMode(mode) {
+    if (multiplayer.enabled && !multiplayer.opponentJoined) {
+        setPartyStatus('Waiting for opponent to join duel before starting.', true);
+        return;
+    }
+    if (currentMode && currentMode !== mode) {
+        saveCurrentModeScore(currentMode);
+    }
+    currentMode = mode;
+    modeSessionScores[mode] = 0;
+    document.getElementById('modeSelect').style.display = 'none';
+    document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(mode + 'Screen').classList.add('active');
+    const badge = document.getElementById('modeBadge');
+    badge.className = 'mode-badge show ' + mode;
+    const labels = { classic:'🏁 Classic', reveal:'🔍 Reveal Rush', price:'💰 Price Guesser' };
+    badge.textContent = labels[mode];
+    if (mode === 'classic') {
+        if (!maps.classic) initMap('classic');
+        if (maps.classic) setTimeout(() => maps.classic.invalidateSize(), 120);
+    }
+    loadCar(mode);
 }
 
-window.RevealCurrent = RevealCurrent;
-window.loadRandomCar = loadRandomCar;
-window.HintCurrent = HintCurrent;
-window.copyMultiplayerCode = copyMultiplayerCode;
+function goBack() {
+    if (revealInterval) { clearInterval(revealInterval); revealInterval = null; }
+    if (currentMode) {
+        saveCurrentModeScore(currentMode);
+    }
+    currentMode = null;
+    document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('modeSelect').style.display = 'block';
+    document.getElementById('modeBadge').className = 'mode-badge';
+}
+
+// ── CAR LOADING ──
+function loadCar(mode) {
+    if (usedIndices.length >= cars.length) usedIndices = [];
+    let idx;
+    do { idx = Math.floor(Math.random() * cars.length); } while (usedIndices.includes(idx));
+    usedIndices.push(idx);
+    currentCar = cars[idx];
+    document.getElementById(mode + 'Round').textContent = round[mode];
+
+    const imgEl = document.getElementById(mode === 'classic' ? 'img' : mode === 'reveal' ? 'imgReveal' : 'imgPrice');
+    const skEl  = document.getElementById('skeleton' + cap(mode));
+    const noEl  = document.getElementById('noImg' + cap(mode));
+
+    imgEl.classList.remove('visible');
+    skEl.style.display = 'block';
+    noEl.classList.remove('show');
+
+    const candidates = buildImageCandidates(currentCar.image);
+    loadImageWithFallback(imgEl, candidates,
+        () => {
+            skEl.style.display = 'none';
+            imgEl.classList.add('visible');
+            if (mode === 'reveal') startRevealTimer();
+        },
+        () => {
+            skEl.style.display = 'none';
+            noEl.classList.add('show');
+            if (mode === 'reveal') startRevealTimer();
+        }
+    );
+
+    hideFeedback(mode);
+    clearForm(mode);
+
+    if (mode === 'reveal') {
+        if (revealInterval) clearInterval(revealInterval);
+        const ov = document.getElementById('revealOverlay');
+        ov.style.backdropFilter = 'blur(40px)';
+        ov.style.webkitBackdropFilter = 'blur(40px)';
+        document.getElementById('revealStage').textContent = 'Stage 1 of 4';
+        revealStage = 0;
+    }
+
+    if (mode === 'price') {
+        document.getElementById('priceResultSection').style.display = 'none';
+        document.getElementById('priceSubmitBtn').textContent = 'Lock In Price →';
+        document.getElementById('priceSubmitBtn').disabled = false;
+        document.getElementById('priceSlider').value = 50000;
+        updatePriceDisplay();
+    }
+}
+
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function buildImageCandidates(path) {
+    const file = path.split('/').pop();
+    const candidates = [
+        path,
+        './' + path,
+        'ScriptMats/photos/' + file,
+        './ScriptMats/photos/' + file,
+        'photos/' + file,
+        './photos/' + file,
+        '../ScriptMats/photos/' + file
+    ];
+    return [...new Set(candidates)];
+}
+
+function loadImageWithFallback(imgEl, candidates, onSuccess, onFailure) {
+    let i = 0;
+    imgEl.onload = onSuccess;
+    imgEl.onerror = () => {
+        i++;
+        if (i >= candidates.length) {
+            onFailure();
+            return;
+        }
+        imgEl.src = candidates[i];
+    };
+    imgEl.src = '';
+    setTimeout(() => { imgEl.src = candidates[0]; }, 30);
+}
+
+function skipCar(mode) { round[mode]++; loadCar(mode); }
+
+function clearForm(mode) {
+    if (mode === 'classic') {
+        document.getElementById('fnameClassic').value = '';
+        document.getElementById('yearClassic').value = '';
+        document.getElementById('countryClassic').value = '';
+        document.getElementById('countryFallbackClassic').value = '';
+        document.getElementById('selectedCountryClassic').textContent = 'No country selected';
+    }
+    if (mode === 'reveal') document.getElementById('fnameReveal').value = '';
+}
+
+// ── REVEAL TIMER ──
+function startRevealTimer() {
+    revealStage = 0; revealTimer = REVEAL_STAGE_SECONDS;
+    const blurs = [40, 24, 10, 0];
+    const stages = ['Stage 1 of 4 — Very Blurry', 'Stage 2 of 4 — Getting clearer…', 'Stage 3 of 4 — Almost there!', 'Stage 4 of 4 — Fully revealed'];
+    updateRevealTimer();
+    if (revealInterval) clearInterval(revealInterval);
+    revealInterval = setInterval(() => {
+        revealTimer--;
+        updateRevealTimer();
+        if (revealTimer <= 0) {
+            revealStage++;
+            if (revealStage >= blurs.length) {
+                clearInterval(revealInterval);
+                return;
+            }
+            revealTimer = REVEAL_STAGE_SECONDS;
+            const ov = document.getElementById('revealOverlay');
+            ov.style.backdropFilter = `blur(${blurs[revealStage]}px)`;
+            ov.style.webkitBackdropFilter = `blur(${blurs[revealStage]}px)`;
+            document.getElementById('revealStage').textContent = stages[revealStage];
+        }
+    }, 1000);
+}
+
+function updateRevealTimer() {
+    document.getElementById('timerNum').textContent = revealTimer;
+    const progress = document.getElementById('timerProgress');
+    const pct = revealTimer / REVEAL_STAGE_SECONDS;
+    progress.style.strokeDashoffset = 157 * (1 - pct);
+    progress.style.stroke = revealTimer > 5 ? 'var(--green)' : revealTimer > 2 ? 'var(--yellow)' : 'var(--red)';
+}
+
+// ── PRICE DISPLAY ──
+function updatePriceDisplay() {
+    const val = parseInt(document.getElementById('priceSlider').value);
+    document.getElementById('priceDisplay').textContent = val.toLocaleString();
+    document.getElementById('priceInputExact').value = val;
+}
+
+function switchGameTab(tabName) {
+    const playPanel = document.getElementById('playTabPanel');
+    const partyPanel = document.getElementById('partyTabPanel');
+    const livePanel = document.getElementById('liveTabPanel');
+    const playBtn = document.getElementById('playTabBtn');
+    const partyBtn = document.getElementById('partyTabBtn');
+    const liveBtn = document.getElementById('liveTabBtn');
+
+    const isPlay = tabName === 'play';
+    const isParty = tabName === 'party';
+    const isLive = tabName === 'live';
+
+    playPanel.classList.toggle('active', isPlay);
+    partyPanel.classList.toggle('active', isParty);
+    livePanel.classList.toggle('active', isLive);
+
+    playBtn.classList.toggle('active', isPlay);
+    partyBtn.classList.toggle('active', isParty);
+    liveBtn.classList.toggle('active', isLive);
+
+    if (isPlay) {
+        if (currentMode && document.getElementById(currentMode + 'Screen')) {
+            document.getElementById('modeSelect').style.display = 'none';
+        }
+    }
+
+    if (isLive) {
+        loadLiveRooms();
+    }
+}
+
+async function loadLiveRooms() {
+    const roomsEl = document.getElementById('liveRoomsCount');
+    const playersEl = document.getElementById('livePlayersCount');
+    const listEl = document.getElementById('livePlayersList');
+
+    try {
+        const { data: games, error } = await supabaseClient
+            .from('multiplayer_games')
+            .select('game_code, status, player_1_id, player_2_id')
+            .in('status', ['waiting', 'active'])
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+
+        const activeGames = games || [];
+        const playerIds = [...new Set(activeGames.flatMap(game => [game.player_1_id, game.player_2_id].filter(Boolean)))];
+        if (roomsEl) roomsEl.textContent = String(activeGames.length);
+        if (playersEl) playersEl.textContent = String(playerIds.length);
+
+        if (!activeGames.length) {
+            listEl.innerHTML = '<div class="live-empty">No live rooms right now. Create one from the duel tab.</div>';
+            return;
+        }
+
+        const { data: users, error: usersError } = await supabaseClient
+            .from('users')
+            .select('id, name, email')
+            .in('id', playerIds);
+        if (usersError) throw usersError;
+
+        const userMap = new Map((users || []).map(user => [user.id, user]));
+        const cards = activeGames.flatMap(game => {
+            const host = userMap.get(game.player_1_id);
+            const guest = userMap.get(game.player_2_id);
+            return [
+                host && `
+                    <div class="live-room-card">
+                        <div class="live-room-main">
+                            <div class="live-room-title">${host.name || 'Anonymous'} <span style="color:rgba(255,255,255,0.35);font-weight:400">(host)</span></div>
+                            <div class="live-room-meta">Room ${game.game_code} · ${game.status}</div>
+                        </div>
+                        <div class="live-room-pill">Live</div>
+                    </div>
+                `,
+                guest && `
+                    <div class="live-room-card">
+                        <div class="live-room-main">
+                            <div class="live-room-title">${guest.name || 'Anonymous'} <span style="color:rgba(255,255,255,0.35);font-weight:400">(guest)</span></div>
+                            <div class="live-room-meta">Room ${game.game_code} · ${game.status}</div>
+                        </div>
+                        <div class="live-room-pill">Live</div>
+                    </div>
+                `
+            ].filter(Boolean);
+        }).flat();
+
+        listEl.innerHTML = cards.join('') || '<div class="live-empty">Live rooms exist, but player profiles are still loading.</div>';
+    } catch (error) {
+        console.warn('Could not load live rooms:', error?.message || error);
+        if (roomsEl) roomsEl.textContent = '0';
+        if (playersEl) playersEl.textContent = '0';
+        listEl.innerHTML = '<div class="live-empty">Could not load live players right now.</div>';
+    }
+}
+
+function clampPriceValue(val) {
+    if (!Number.isFinite(val)) return 5000;
+    return Math.max(5000, Math.min(5000000, val));
+}
+
+function updatePriceFromInput() {
+    const raw = parseInt(document.getElementById('priceInputExact').value, 10);
+    const val = clampPriceValue(raw);
+    document.getElementById('priceInputExact').value = val;
+    document.getElementById('priceSlider').value = val;
+    document.getElementById('priceDisplay').textContent = val.toLocaleString();
+}
+
+function nudgePrice(delta) {
+    const cur = parseInt(document.getElementById('priceSlider').value, 10);
+    const next = clampPriceValue(cur + delta);
+    document.getElementById('priceSlider').value = next;
+    updatePriceDisplay();
+}
+
+// ── FEEDBACK ──
+function hideFeedback(mode) {
+    const f = document.getElementById('feedback' + cap(mode));
+    f.className = 'feedback'; f.textContent = '';
+}
+function showFeedback(mode, text, type) {
+    const f = document.getElementById('feedback' + cap(mode));
+    f.className = 'feedback ' + type; f.textContent = text;
+    requestAnimationFrame(() => requestAnimationFrame(() => f.classList.add('show')));
+}
+
+// ── ANIMATIONS ──
+function animateCard(mode, type) {
+    const c = document.getElementById('carCard' + cap(mode));
+    c.classList.remove('shake','correct');
+    requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add(type === 'correct' ? 'correct' : 'shake')));
+}
+function bumpScore() {
+    const el = document.getElementById('scoreVal');
+    el.classList.remove('bump');
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('bump')));
+    setTimeout(() => el.classList.remove('bump'), 500);
+}
+
+function addScore(points) {
+    score += points;
+    if (currentMode && modeSessionScores[currentMode] !== undefined) {
+        modeSessionScores[currentMode] += points;
+    }
+    document.getElementById('scoreVal').textContent = score;
+    bumpScore();
+    syncPartyScoreIfNeeded();
+}
+
+async function saveCurrentModeScore(mode) {
+    const sessionScore = modeSessionScores[mode] || 0;
+    if (!mode || sessionScore <= 0) return;
+    try {
+        const userId = await getSignedInUserId();
+        if (!userId) {
+            // No signed-in user — save score locally for guest
+            try {
+                saveGuestScoreLocally(mode, sessionScore, Math.max(0, (round[mode] || 1) - 1));
+            } catch (e) { console.warn('Could not save guest score locally', e?.message || e); }
+            modeSessionScores[mode] = 0;
+            return;
+        }
+        const carsGuessed = Math.max(0, (round[mode] || 1) - 1);
+        await supabaseClient.from('game_scores').insert({
+            user_id: userId,
+            score: sessionScore,
+            cars_guessed: carsGuessed,
+            game_type: mode
+        });
+        modeSessionScores[mode] = 0;
+    } catch (error) {
+        console.warn('Could not save mode score:', error?.message || error);
+    }
+}
+
+function getGuestFromLocalStorage() {
+    try {
+        const raw = localStorage.getItem('carGuesserGuest');
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function saveGuestScoreLocally(mode, score, carsGuessed) {
+    try {
+        const key = 'carGuesser_guest_scores';
+        const list = JSON.parse(localStorage.getItem(key) || '[]');
+        const guest = getGuestFromLocalStorage() || { deviceId: null, name: 'Guest' };
+        list.push({ id: Date.now(), guest_device_id: guest.deviceId || null, guest_name: guest.name || null, mode, score, carsGuessed, created_at: new Date().toISOString() });
+        localStorage.setItem(key, JSON.stringify(list));
+        return { success: true };
+    } catch (e) {
+        console.warn('saveGuestScoreLocally error', e?.message || e);
+        return { success: false, error: e?.message || e };
+    }
+}
+function updateStreak() {
+    document.getElementById('streakNum').textContent = streak;
+    document.getElementById('streakPill').classList.toggle('show', streak >= 2);
+}
+function flashCorrect(mode) {
+    const f = document.getElementById('correctFlash' + cap(mode));
+    f.classList.add('show');
+    setTimeout(() => f.classList.remove('show'), 400);
+}
+function confetti() {
+    const wrap = document.getElementById('confettiWrap');
+    const colors = ['#E8001D','#ff6a00','#ffc840','#00d46a','#0088ff','#ffffff'];
+    for (let i = 0; i < 80; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetto';
+        c.style.cssText = `left:${Math.random()*100}%;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};width:${Math.random()*10+4}px;height:${Math.random()*10+4}px;animation-duration:${Math.random()*2+1}s;animation-delay:${Math.random()*0.5}s;`;
+        wrap.appendChild(c);
+        setTimeout(() => c.remove(), 3500);
+    }
+}
+
+// ── GAME ACTIONS ──
+function RevealCurrent(mode) {
+    if (!currentCar) return;
+    if (mode === 'classic') {
+        document.getElementById('fnameClassic').value = currentCar.name;
+        document.getElementById('yearClassic').value = currentCar.year;
+        document.getElementById('countryClassic').value = currentCar.country;
+        document.getElementById('selectedCountryClassic').textContent = '✓ ' + currentCar.country;
+    }
+    showFeedback(mode, '👁  ' + currentCar.name + ' · ' + currentCar.year + ' · ' + currentCar.country, 'reveal');
+}
+function HintCurrent(mode) {
+    if (!currentCar) return;
+    const decade = Math.floor(currentCar.year / 10) * 10;
+    const words = currentCar.name.split(' ').length;
+    const first = currentCar.name.charAt(0);
+    const len = currentCar.name.length;
+    showFeedback(mode, `💡  ${len} letters · starts with "${first}" · ${words} word${words>1?'s':''} · From the ${decade}s`, 'hint');
+}
+
+function submitGuess(mode) {
+    if (!currentCar) return;
+
+    if (mode === 'classic') {
+        const guess   = document.getElementById('fnameClassic').value.trim().toLowerCase();
+        const yearVal = document.getElementById('yearClassic').value.trim();
+        const year    = parseInt(yearVal);
+        const country = document.getElementById('countryClassic').value.trim().toLowerCase();
+        if (!guess)  { showFeedback(mode,'⚠ Enter a car name.','wrong'); animateCard(mode,'wrong'); return; }
+        if (!yearVal||isNaN(year)) { showFeedback(mode,'⚠ Enter a valid year.','wrong'); animateCard(mode,'wrong'); return; }
+        if (!country){ showFeedback(mode,'⚠ Select a country on the map.','wrong'); animateCard(mode,'wrong'); return; }
+        const nameOk    = guess === currentCar.name.toLowerCase();
+        const yearOk    = year  === currentCar.year;
+        const countryOk = country === currentCar.country.toLowerCase();
+        if (nameOk && yearOk && countryOk) {
+            addScore(1); streak++; round[mode]++;
+            flashCorrect(mode); updateStreak(); animateCard(mode,'correct');
+            if (streak >= 3) confetti();
+            showFeedback(mode, '✓  Correct! Loading next car…', 'correct');
+            setTimeout(() => { loadCar(mode); window.scrollTo({top:0,behavior:'smooth'}); }, 1400);
+        } else {
+            streak = 0; updateStreak(); animateCard(mode,'wrong');
+            let parts = [];
+            if (!nameOk)    parts.push('name');
+            if (!yearOk)    parts.push('year');
+            if (!countryOk) parts.push('country');
+            showFeedback(mode, '✗  Wrong ' + parts.join(', ') + '. Try again!', 'wrong');
+        }
+    }
+
+    else if (mode === 'reveal') {
+        const guess = document.getElementById('fnameReveal').value.trim().toLowerCase();
+        if (!guess) { showFeedback(mode,'⚠ Enter a car name.','wrong'); return; }
+        if (guess === currentCar.name.toLowerCase()) {
+            if (revealInterval) { clearInterval(revealInterval); revealInterval = null; }
+            // Points based on stage (earlier = more points)
+            const pts = [4,3,2,1][revealStage] || 1;
+            addScore(pts); streak++;
+            flashCorrect(mode); updateStreak(); animateCard(mode,'correct');
+            if (streak >= 3) confetti();
+            // Full reveal
+            const ov = document.getElementById('revealOverlay');
+            ov.style.backdropFilter = 'blur(0px)';
+            ov.style.webkitBackdropFilter = 'blur(0px)';
+            showFeedback(mode, `✓  Correct! +${pts} point${pts>1?'s':''} (Stage ${revealStage+1}) — Next car…`, 'correct');
+            round[mode]++;
+            setTimeout(() => { loadCar(mode); window.scrollTo({top:0,behavior:'smooth'}); }, 1600);
+        } else {
+            streak = 0; updateStreak(); animateCard(mode,'wrong');
+            showFeedback(mode, '✗  Wrong! Keep watching…', 'wrong');
+        }
+    }
+
+    else if (mode === 'price') {
+        const guessPrice = clampPriceValue(parseInt(document.getElementById('priceInputExact').value, 10));
+        const actual = currentCar.price;
+        const diff = Math.abs(guessPrice - actual);
+        const pct = diff / actual;
+        let pts = 0, cls = '', msg = '';
+        if (pct <= 0.05)      { pts=5; cls='close';  msg='🎯 Incredible! Within 5%!'; }
+        else if (pct <= 0.15) { pts=3; cls='close';  msg='🔥 Very close! Within 15%!'; }
+        else if (pct <= 0.30) { pts=2; cls='medium'; msg='👍 Pretty good! Within 30%!'; }
+        else if (pct <= 0.50) { pts=1; cls='medium'; msg='📈 Not bad. Within 50%.'; }
+        else                   { pts=0; cls='far';    msg='💸 Way off!'; }
+
+        if (pts > 0) { addScore(pts); streak++; if (streak >= 3) confetti(); }
+        else streak = 0;
+        updateStreak();
+        if (pts >= 3) { flashCorrect(mode); animateCard(mode,'correct'); }
+        else animateCard(mode,'wrong');
+
+        document.getElementById('priceResultSection').style.display = 'block';
+        document.getElementById('priceActual').textContent = 'Actual price: $' + actual.toLocaleString();
+        const diffEl = document.getElementById('priceDiff');
+        diffEl.textContent = msg + (pts > 0 ? ` +${pts} pts` : '');
+        diffEl.className = 'price-diff ' + cls;
+        document.getElementById('priceSubmitBtn').textContent = 'Next Car →';
+        document.getElementById('priceSubmitBtn').onclick = () => {
+            round[mode]++;
+            loadCar(mode);
+            document.getElementById('priceSubmitBtn').onclick = () => submitGuess('price');
+            window.scrollTo({top:0,behavior:'smooth'});
+        };
+    }
+}
+
+// ── PARTY / MULTIPLAYER ──
+function getSearchParam(name) {
+    const u = new URL(window.location.href);
+    return u.searchParams.get(name);
+}
+
+async function getSignedInUserId() {
+    if (multiplayer.myUserId) return multiplayer.myUserId;
+    await bootstrapAuthState();
+    if (multiplayer.myUserId) return multiplayer.myUserId;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session?.user?.id) return session.user.id;
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user?.id) return user.id;
+    return null;
+}
+
+async function bootstrapAuthState() {
+    if (authBootstrapPromise) return authBootstrapPromise;
+    authBootstrapPromise = (async () => {
+        try {
+            for (let attempt = 0; attempt < 3; attempt++) {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session?.user?.id) {
+                    multiplayer.myUserId = session.user.id;
+                    return session.user;
+                }
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user?.id) {
+                    multiplayer.myUserId = user.id;
+                    return user;
+                }
+                await new Promise(resolve => setTimeout(resolve, 250));
+            }
+            return null;
+        } catch {
+            return null;
+        } finally {
+            authBootstrapPromise = null;
+        }
+    })();
+    return authBootstrapPromise;
+}
+
+function setPartyStatus(text, isWarn = false) {
+    const el = document.getElementById('partyStatus');
+    el.textContent = text;
+    el.style.color = isWarn ? '#ff7080' : 'var(--muted)';
+    el.classList.add('show');
+}
+
+function setPartyUIActive(active) {
+    document.getElementById('leavePartyBtn').classList.toggle('party-hidden', !active);
+    document.getElementById('createPartyBtn').classList.toggle('party-hidden', active);
+    document.getElementById('joinPartyBtn').classList.toggle('party-hidden', active);
+    document.getElementById('joinPartyCode').classList.toggle('party-hidden', active);
+    document.getElementById('partyScoreboard').classList.toggle('show', active);
+}
+
+function updatePartyScoreboard(game) {
+    const isHost = multiplayer.role === 'host';
+    const myScore = isHost ? (game.player_1_score || 0) : (game.player_2_score || 0);
+    const oppScore = isHost ? (game.player_2_score || 0) : (game.player_1_score || 0);
+    document.getElementById('partyYouScore').textContent = myScore;
+    document.getElementById('partyOppScore').textContent = oppScore;
+    document.getElementById('partyOppLabel').textContent = game.player_2_id ? 'Opponent' : 'Waiting...';
+}
+
+async function fetchGame(gameId) {
+    const { data, error } = await supabaseClient
+        .from('multiplayer_games')
+        .select('*')
+        .eq('id', gameId)
+        .maybeSingle();
+    if (error) throw error;
+    return data;
+}
+
+async function patchGame(gameId, payload) {
+    const { data, error } = await supabaseClient
+        .from('multiplayer_games')
+        .update(payload)
+        .eq('id', gameId)
+        .select('*')
+        .maybeSingle();
+    if (error) throw error;
+    return data;
+}
+
+async function createParty() {
+    try {
+        await bootstrapAuthState();
+        multiplayer.myUserId = multiplayer.myUserId || await getSignedInUserId();
+        if (!multiplayer.myUserId) {
+            setPartyStatus('Sign in on the dashboard first, then reload this page.', true);
+            return;
+        }
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const { data, error } = await supabaseClient
+            .from('multiplayer_games')
+            .insert({
+                game_code: code,
+                player_1_id: multiplayer.myUserId,
+                status: 'waiting'
+            })
+            .select('*')
+            .single();
+        if (error) throw error;
+
+        multiplayer.enabled = true;
+        multiplayer.gameId = data.id;
+        multiplayer.gameCode = data.game_code;
+        multiplayer.role = 'host';
+        multiplayer.opponentJoined = false;
+        multiplayer.lastSyncedScore = 0;
+        score = 0;
+        streak = 0;
+        document.getElementById('scoreVal').textContent = '0';
+        updateStreak();
+        document.getElementById('partyCodeDisplay').textContent = 'Code: ' + data.game_code;
+        setPartyUIActive(true);
+        updatePartyScoreboard(data);
+        setPartyStatus('Duel created. Share the code and wait for your opponent.');
+        subscribeToParty();
+
+        const u = new URL(window.location.href);
+        u.searchParams.set('gameId', data.id);
+        u.searchParams.set('gameCode', data.game_code);
+        u.searchParams.set('role', 'host');
+        window.history.replaceState({}, '', u.toString());
+    } catch (e) {
+        setPartyStatus('Could not create duel: ' + (e.message || 'Unknown error'), true);
+    }
+}
+
+async function joinPartyByCode() {
+    const code = document.getElementById('joinPartyCode').value.trim().toUpperCase();
+    if (code.length !== 6) {
+        setPartyStatus('Enter a valid 6-character code.', true);
+        return;
+    }
+    try {
+        await bootstrapAuthState();
+        multiplayer.myUserId = multiplayer.myUserId || await getSignedInUserId();
+        if (!multiplayer.myUserId) {
+            setPartyStatus('Sign in on the dashboard first, then reload this page.', true);
+            return;
+        }
+        const { data, error } = await supabaseClient
+            .from('multiplayer_games')
+            .update({ player_2_id: multiplayer.myUserId, status: 'active' })
+            .eq('game_code', code)
+            .eq('status', 'waiting')
+            .is('player_2_id', null)
+            .select('*')
+            .maybeSingle();
+        if (error) throw error;
+        if (!data) {
+            setPartyStatus('Duel not found or already full.', true);
+            return;
+        }
+
+        multiplayer.enabled = true;
+        multiplayer.gameId = data.id;
+        multiplayer.gameCode = data.game_code;
+        multiplayer.role = 'guest';
+        multiplayer.opponentJoined = true;
+        multiplayer.lastSyncedScore = 0;
+        score = 0;
+        streak = 0;
+        document.getElementById('scoreVal').textContent = '0';
+        updateStreak();
+        document.getElementById('partyCodeDisplay').textContent = 'Code: ' + data.game_code;
+        setPartyUIActive(true);
+        updatePartyScoreboard(data);
+        setPartyStatus('Joined duel. Choose a mode and start racing.');
+        subscribeToParty();
+
+        const u = new URL(window.location.href);
+        u.searchParams.set('gameId', data.id);
+        u.searchParams.set('gameCode', data.game_code);
+        u.searchParams.set('role', 'guest');
+        window.history.replaceState({}, '', u.toString());
+    } catch (e) {
+        setPartyStatus('Could not join duel: ' + (e.message || 'Unknown error'), true);
+    }
+}
+
+async function syncPartyScoreIfNeeded() {
+    if (!multiplayer.enabled || !multiplayer.gameId) return;
+    if (score === multiplayer.lastSyncedScore) return;
+    multiplayer.lastSyncedScore = score;
+    const patch = multiplayer.role === 'host'
+        ? { player_1_score: score }
+        : { player_2_score: score };
+    try {
+        const game = await patchGame(multiplayer.gameId, patch);
+        if (game) {
+            updatePartyScoreboard(game);
+            maybeFinishPartyGame(game);
+        }
+    } catch (e) {
+        setPartyStatus('Duel sync issue: ' + (e.message || 'Retrying...'), true);
+    }
+}
+
+async function maybeFinishPartyGame(game) {
+    if (!multiplayer.enabled) return;
+    const p1 = game.player_1_score || 0;
+    const p2 = game.player_2_score || 0;
+    const hasWinner = p1 >= TARGET_MULTIPLAYER_SCORE || p2 >= TARGET_MULTIPLAYER_SCORE;
+    if (!hasWinner || game.status === 'finished') return;
+    const winnerId = p1 >= TARGET_MULTIPLAYER_SCORE ? game.player_1_id : game.player_2_id;
+    try {
+        const finished = await patchGame(multiplayer.gameId, {
+            status: 'finished',
+            winner_id: winnerId,
+            finished_at: new Date().toISOString()
+        });
+        if (finished) handleFinishedParty(finished);
+    } catch (e) {
+        setPartyStatus('Could not finalize winner yet. Scores are still saved.', true);
+    }
+}
+
+function handleFinishedParty(game) {
+    const p1 = game.player_1_score || 0;
+    const p2 = game.player_2_score || 0;
+    const iWon = game.winner_id && game.winner_id === multiplayer.myUserId;
+    updatePartyScoreboard(game);
+    setPartyStatus(iWon ? 'You won the duel! First to ' + TARGET_MULTIPLAYER_SCORE + '. Returning to lobby...' : 'Opponent won this race. Returning to lobby...');
+    if (game.status === 'finished') {
+        if (iWon) confetti();
+        scheduleLobbyRedirect();
+    }
+    document.getElementById('partyOppLabel').textContent = 'Opponent';
+    if (p1 >= TARGET_MULTIPLAYER_SCORE || p2 >= TARGET_MULTIPLAYER_SCORE) {
+        document.getElementById('modeSelect').style.display = 'block';
+        document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+        currentMode = null;
+    }
+}
+
+async function leaveParty() {
+    if (lobbyRedirectTimeout) {
+        clearTimeout(lobbyRedirectTimeout);
+        lobbyRedirectTimeout = null;
+    }
+    if (multiplayer.channel) {
+        supabaseClient.removeChannel(multiplayer.channel);
+        multiplayer.channel = null;
+    }
+    multiplayer.enabled = false;
+    multiplayer.gameId = null;
+    multiplayer.gameCode = '';
+    multiplayer.role = '';
+    multiplayer.opponentJoined = false;
+    multiplayer.lastSyncedScore = 0;
+    document.getElementById('partyCodeDisplay').textContent = '';
+    setPartyUIActive(false);
+    const statusEl = document.getElementById('partyStatus');
+    statusEl.textContent = '';
+    statusEl.classList.remove('show');
+
+    const u = new URL(window.location.href);
+    u.searchParams.delete('gameId');
+    u.searchParams.delete('gameCode');
+    u.searchParams.delete('role');
+    window.history.replaceState({}, '', u.toString());
+}
+
+function subscribeToParty() {
+    if (!multiplayer.gameId) return;
+    if (multiplayer.channel) {
+        supabaseClient.removeChannel(multiplayer.channel);
+        multiplayer.channel = null;
+    }
+    multiplayer.channel = supabaseClient
+        .channel('party-' + multiplayer.gameId)
+        .on('postgres_changes', {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'multiplayer_games',
+            filter: 'id=eq.' + multiplayer.gameId
+        }, payload => {
+            const game = payload.new;
+            multiplayer.opponentJoined = !!game.player_2_id;
+            updatePartyScoreboard(game);
+            if (game.status === 'active' && multiplayer.opponentJoined) {
+                setPartyStatus('Opponent joined. First to ' + TARGET_MULTIPLAYER_SCORE + ' points wins.');
+            }
+            if (game.status === 'finished') handleFinishedParty(game);
+        })
+        .subscribe();
+}
+
+async function initMultiplayerFromUrlOrSession() {
+    const gameId = getSearchParam('gameId');
+    const role = getSearchParam('role') || '';
+    const gameCode = getSearchParam('gameCode') || '';
+    if (!gameId || !role) {
+        setPartyUIActive(false);
+        const statusEl = document.getElementById('partyStatus');
+        statusEl.textContent = '';
+        statusEl.classList.remove('show');
+        return;
+    }
+    try {
+        await bootstrapAuthState();
+        multiplayer.myUserId = multiplayer.myUserId || await getSignedInUserId();
+        if (!multiplayer.myUserId) {
+            setPartyStatus('Sign in on the dashboard, then refresh this page.', true);
+            setPartyUIActive(false);
+            return;
+        }
+        const game = await fetchGame(gameId);
+        if (!game) {
+            setPartyStatus('Duel no longer exists.', true);
+            setPartyUIActive(false);
+            return;
+        }
+        multiplayer.enabled = true;
+        multiplayer.gameId = game.id;
+        multiplayer.gameCode = gameCode || game.game_code;
+        multiplayer.role = role;
+        multiplayer.opponentJoined = !!game.player_2_id;
+        multiplayer.lastSyncedScore = 0;
+        document.getElementById('partyCodeDisplay').textContent = 'Code: ' + multiplayer.gameCode;
+        setPartyUIActive(true);
+        updatePartyScoreboard(game);
+        if (!multiplayer.opponentJoined) {
+            setPartyStatus('Waiting for opponent to join with code ' + multiplayer.gameCode + '.');
+        } else if (game.status === 'finished') {
+            handleFinishedParty(game);
+        } else {
+            setPartyStatus('Duel connected. First to ' + TARGET_MULTIPLAYER_SCORE + ' points wins.');
+        }
+        subscribeToParty();
+    } catch (e) {
+        setPartyStatus('Could not restore duel: ' + (e.message || 'Unknown error'), true);
+        setPartyUIActive(false);
+    }
+}
+
+window.createParty = createParty;
+window.joinPartyByCode = joinPartyByCode;
+window.leaveParty = leaveParty;
+
+// ── MAP ──
+function initMap(mode) {
+    const containerId = 'mapContainer' + cap(mode);
+    if (typeof L === 'undefined') {
+        document.getElementById(containerId).innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.35);font-size:13px;">Map failed to load. Use country list below.</div>';
+        return;
+    }
+    const m = L.map(containerId, { zoomControl:true, scrollWheelZoom:false }).setView([20,0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:18 }).addTo(m);
+    maps[mode] = m;
+    setTimeout(() => m.invalidateSize(), 150);
+    const hasCars = [...new Set(cars.map(c => c.country))];
+    fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+        .then(r=>r.json())
+        .then(data => {
+            L.geoJson(data, {
+                style: f => {
+                    const has = hasCars.includes(f.properties.name);
+                    return { color:has?'#E8001D':'rgba(120,120,120,0.4)', weight:has?2:0.5, fillOpacity:has?0.3:0.04, fillColor:has?'#E8001D':'#888' };
+                },
+                onEachFeature: (f, layer) => {
+                    const name = f.properties.name;
+                    layer.bindTooltip(name, {sticky:true});
+                    if (hasCars.includes(name)) {
+                        layer.on('click', () => {
+                            document.getElementById('country' + cap(mode)).value = name;
+                            const fallback = document.getElementById('countryFallbackClassic');
+                            if (fallback) fallback.value = name;
+                            document.getElementById('selectedCountry' + cap(mode)).textContent = '✓ ' + name;
+                        });
+                        layer.on('mouseover', () => layer.setStyle({fillOpacity:0.55,weight:2.5}));
+                        layer.on('mouseout',  () => layer.setStyle({fillOpacity:0.3,weight:2}));
+                    }
+                }
+            }).addTo(m);
+        })
+        .catch(() => {
+            document.getElementById(containerId).innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.35);font-size:13px;">Map data unavailable. Use country list below.</div>';
+        });
+}
+
+// ── AUTOCOMPLETE ──
+function setupAutocomplete() {
+    ['Classic','Reveal'].forEach(mode => {
+        const dl = document.getElementById('carSuggestions' + mode);
+        if (!dl) return;
+        cars.forEach(c => { const o=document.createElement('option'); o.value=c.name; dl.appendChild(o); });
+    });
+}
+
+function setupCountryFallback() {
+    const sel = document.getElementById('countryFallbackClassic');
+    if (!sel) return;
+    const countries = [...new Set(cars.map(c => c.country))].sort((a, b) => a.localeCompare(b));
+    sel.innerHTML = '<option value="">Or select country from list</option>';
+    countries.forEach(country => {
+        const opt = document.createElement('option');
+        opt.value = country;
+        opt.textContent = country;
+        sel.appendChild(opt);
+    });
+    sel.addEventListener('change', () => {
+        const country = sel.value;
+        document.getElementById('countryClassic').value = country;
+        document.getElementById('selectedCountryClassic').textContent = country ? ('✓ ' + country) : 'No country selected';
+    });
+}
 </script>
 </body>
 </html>
