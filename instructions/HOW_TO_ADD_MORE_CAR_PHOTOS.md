@@ -57,7 +57,7 @@ Car-Guesser/
 │       ├── 3.jpeg
 │       ├── ... etc
 │       └── 8.jpeg (your new image)
-├── HOW_TO_ADD_MORE_CAR_PHOTOS.md
+├── instructions/HOW_TO_ADD_MORE_CAR_PHOTOS.md
 └── README.md
 ```
 
